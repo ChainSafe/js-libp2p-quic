@@ -1,0 +1,15 @@
+{
+  "name": "@chainsafe/libp2p-quic-darwin-universal",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "main": "libp2p-quic.darwin-universal.node",
+  "files": [
+    "libp2p-quic.darwin-universal.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}

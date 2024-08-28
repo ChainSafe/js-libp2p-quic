@@ -1,0 +1,27 @@
+[package]
+edition = "2021"
+name = "chainsafe_libp2p-quic"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "rust/lib.rs"
+
+[dependencies]
+libp2p-identity = { version = "0.2.9", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
+libp2p-tls = "0.5.0"
+# Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
+napi = { version = "2.12.2", default-features = false, features = ["napi4", "async"] }
+napi-derive = "2.12.2"
+oneshot = "0.1.8"
+quinn = "0.11.3"
+ring = "0.17.8"
+rustls = { version = "0.23.12", features = ["ring"] }
+tokio = { version = "1.39.3", features = ["full"] }
+
+[build-dependencies]
+napi-build = "2.0.1"
+
+[profile.release]
+lto = true
+strip = "symbols"

@@ -1,0 +1,55 @@
+{
+  "name": "@chainsafe/libp2p-quic",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "napi": {
+    "name": "libp2p-quic",
+    "triples": {
+      "additional": [
+        "aarch64-apple-darwin",
+        "aarch64-linux-android",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-freebsd",
+        "universal-apple-darwin"
+      ]
+    }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@libp2p/logger": "^4.0.20",
+    "@libp2p/peer-id-factory": "^4.2.4",
+    "@napi-rs/cli": "^2.18.4",
+    "aegir": "^44.1.1"
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "yarn build:rs && scripts/postbuild.sh && yarn build:ts",
+    "build:ts": "aegir build",
+    "build:rs": "napi build --platform --release --dts src/napi.d.ts --js src/napi.cjs",
+    "build:rs:debug": "napi build --platform --dts src/napi.d.ts --js src/napi.cjs",
+    "lint": "aegir lint",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "aegir test",
+    "universal": "napi universal",
+    "version": "napi version"
+  },
+  "packageManager": "yarn@4.4.0",
+  "dependencies": {
+    "@libp2p/crypto": "^4.1.9",
+    "@libp2p/interface": "^1.7.0",
+    "@multiformats/mafmt": "^12.1.6",
+    "@multiformats/multiaddr": "^12.3.0"
+  }
+}
