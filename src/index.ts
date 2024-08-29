@@ -51,7 +51,7 @@ export class QuicTransport implements Transport {
     const privateKeyProto = marshalPrivateKey(components.privateKey);
     const config = { ...options, privateKeyProto };
 
-    this.log = components.logger.forComponent('libp2p:quic')
+    this.log = components.logger.forComponent('libp2p:quic:transport')
     this.components = components
 
     this.#config = new napi.QuinnConfig(config);
@@ -62,15 +62,19 @@ export class QuicTransport implements Transport {
 
     this.listenFilter = listenFilter
     this.dialFilter = dialFilter
+
+    this.log('new')
   }
 
   async dial(ma: Multiaddr, options: QuicDialOptions): Promise<Connection> {
+    this.log('dialing', ma.toString())
     const addr = ma.nodeAddress()
     const dialer = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
     const connection = await dialer?.outboundConnection(addr.address, addr.port)
     const maConn = new QuicConnection({
       connection,
       logger: this.components.logger,
+      direction: 'outbound',
     })
     return options.upgrader.upgradeOutbound(maConn, {
       skipEncryption: true,
@@ -106,8 +110,6 @@ type QuicListenerState = {
   controller: AbortController
 } | {
   status: 'closed'
-  listener: napi.Server
-  listenAddr: Multiaddr
 }
 
 export class QuicListener extends TypedEventEmitter<ListenerEvents> implements Listener {
@@ -124,12 +126,14 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     this.init = init
     this.options = init.options
     this.log = init.logger.forComponent('libp2p:quic:listener')
+
+    this.log('new')
   }
   getAddrs(): Multiaddr[] {
-    if (this.state.status === 'ready') {
-      return []
+    if (this.state.status === 'listening') {
+      return [this.state.listenAddr]
     }
-    return [this.state.listenAddr]
+    return []
   }
 
   async listen(multiaddr: Multiaddr): Promise<void> {
@@ -144,14 +148,17 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
     void this.awaitInboundConnections()
     this.safeDispatchEvent('listening')
+    this.log('listening', multiaddr.toString())
   }
 
   async close(): Promise<void> {
     if (this.state.status === 'listening') {
       this.state.controller.abort()
-      this.state.listener.abort()
-      this.state.status = 'closed' as 'listening'
+      await this.state.listener.abort()
+      const listenAddr = this.state.listenAddr
+      this.state = { status: 'closed' }
       this.safeDispatchEvent('close')
+      this.log('closed', listenAddr.toString())
     }
   }
 
@@ -176,6 +183,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
           this.log.error('error accepting connection', e)
         }
       }
+      this.log('no longer awaiting inbound connections')
     }
   }
 
@@ -183,6 +191,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     const maConn = new QuicConnection({
       connection,
       logger: this.init.logger,
+      direction: 'inbound',
     })
 
     const conn = await this.options.upgrader.upgradeInbound(maConn, {
@@ -203,6 +212,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
 type QuicConnectionInit = {
   connection: napi.Connection
   logger: ComponentLogger
+  direction: Direction
 }
 
 type QuicStreamMuxerFactoryInit = {
@@ -252,6 +262,9 @@ class QuicStreamMuxer implements StreamMuxer {
     this.#connection = init.connection
     this.init = init
     this.log = init.logger.forComponent('libp2p:quic:muxer')
+
+    void this.awaitInboundStreams()
+    this.log('new', this.#connection.id())
   }
 
   async awaitInboundStreams(): Promise<void> {
@@ -273,6 +286,7 @@ class QuicStreamMuxer implements StreamMuxer {
         this.log.error('error accepting stream', e)
       }
     }
+    this.log('no longer awaiting inbound streams')
   }
 
   private onInboundStream = (str: napi.Stream) => {
@@ -287,7 +301,7 @@ class QuicStreamMuxer implements StreamMuxer {
 
   async newStream(name?: string): Promise<Stream> {
     const stream = new QuicStream({
-      stream: await this.#connection.outboundStream(),
+      stream:  await this.#connection.outboundStream(),
       direction: 'outbound',
       logger: this.init.logger,
     })
@@ -298,6 +312,8 @@ class QuicStreamMuxer implements StreamMuxer {
     this.controller.abort()
     await Promise.all(this.streams.map((stream) => stream.close(options)))
     this.streams = []
+
+    this.log('closed', this.#connection.id())
   }
   abort(err: Error): void {
     this.controller.abort()
@@ -305,6 +321,8 @@ class QuicStreamMuxer implements StreamMuxer {
       stream.abort(err)
     }
     this.streams = []
+
+    this.log('aborted', this.#connection.id())
   }
 }
 
@@ -323,13 +341,19 @@ export class QuicConnection implements MultiaddrConnection {
   constructor(init: QuicConnectionInit) {
     this.#connection = init.connection
     this.log = init.logger.forComponent('libp2p:quic:connection')
-    this.remoteAddr = multiaddr()
+    this.remoteAddr = multiaddr(this.#connection.remoteMultiaddr())
+
+    this.log('new', init.direction, this.#connection.id())
   }
   async close(options?: AbortOptions): Promise<void> {
     this.#connection.abort()
+
+    this.log('closed', this.#connection.id())
   }
   abort(err: Error): void {
     this.#connection.abort()
+
+    this.log('aborted', this.#connection.id())
   }
 }
 
@@ -359,12 +383,18 @@ export class QuicStream implements Stream {
 
   constructor(init: QuicStreamInit) {
     this.#stream = init.stream
-    this.id = String(this.#stream.id)
+    this.id = this.#stream.id()
     this.direction = init.direction
     this.log = init.logger.forComponent('libp2p:quic:stream')
+
+    this.log('new', this.direction, this.id)
   }
 
   async close(options?: AbortOptions): Promise<void> {
+    if (this.status !== 'open') {
+      return
+    }
+
     this.status = 'closing'
     this.readStatus = 'closing'
     this.writeStatus = 'closing'
@@ -375,41 +405,70 @@ export class QuicStream implements Stream {
     this.status = 'closed'
     this.readStatus = 'closed'
     this.writeStatus = 'closed'
+
+    this.log('closed', this.direction, this.id)
   }
   async closeRead(options?: AbortOptions): Promise<void> {
+    if (this.readStatus !== 'ready') {
+      return
+    }
+
     this.#stream.stopRead()
     this.readStatus = 'closed'
     if (this.writeStatus === 'closed') {
       this.status = 'closed'
     }
+    this.log('close read', this.direction, this.id)
   }
   async closeWrite(options?: AbortOptions): Promise<void> {
+    if (this.writeStatus !== 'ready') {
+      return
+    }
+
     this.#stream.finishWrite()
     this.writeStatus = 'closed'
     if (this.readStatus === 'closed') {
       this.status = 'closed'
     }
+    this.log('close write', this.direction, this.id)
   }
   abort(err: Error): void {
+    if (this.status === 'closed') {
+      return
+    }
+
     this.#stream.resetWrite()
     this.#stream.stopRead()
     this.status = 'aborted'
     this.readStatus = 'closed'
     this.writeStatus = 'closed'
+
+    this.log('aborted', this.direction, this.id)
   }
   async * _source (): AsyncGenerator<Uint8ArrayList> {
-    while (true) {
-      const chunk = await this.#stream.read(MAX_CHUNK_SIZE)
-      yield new Uint8ArrayList(chunk)
+    try {
+      while (true) {
+        const chunk = await this.#stream.read(MAX_CHUNK_SIZE)
+        if (chunk == null) {
+          break
+        }
+        yield new Uint8ArrayList(chunk)
+      }
+    } finally {
+      await this.closeRead()
     }
   }
   sink: Sink<Source<Uint8Array | Uint8ArrayList>, Promise<void>> = async (source) => {
-    for await (const chunk of source) {
-      if (chunk instanceof Uint8ArrayList) {
-        await this.#stream.write(chunk.subarray())
-      } else {
-        await this.#stream.write(chunk)
+    try {
+      for await (const chunk of source) {
+        if (chunk instanceof Uint8ArrayList) {
+          await this.#stream.write(chunk.subarray())
+        } else {
+          await this.#stream.write(chunk)
+        }
       }
+    } finally {
+      await this.closeWrite()
     }
   }
 }

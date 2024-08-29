@@ -1,20 +1,16 @@
 /* eslint-disable no-console */
 /* eslint-env mocha */
 
-import { defaultLogger } from '@libp2p/logger'
-import { generateKeyPair } from '@libp2p/crypto/keys'
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import { quic, type QuicComponents } from '../src/index.js'
+import { createComponents } from './util.js'
 
 describe('Quic Transport', () => {
   let components: QuicComponents
 
   beforeEach(async () => {
-    components = {
-      privateKey: await generateKeyPair('Ed25519'),
-      logger: defaultLogger()
-    }
+    components = await createComponents()
   })
 
   it('transport filter filters out invalid dial multiaddrs', async () => {

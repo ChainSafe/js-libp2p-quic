@@ -350,7 +350,7 @@ export declare class ConnectionStats {
 export declare class Server {
   constructor(config: QuinnConfig, ip: string, port: number)
   inboundConnection(): Promise<Connection>
-  abort(): void
+  abort(): Promise<void>
 }
 export declare class Client {
   constructor(config: QuinnConfig, family: SocketFamily)
@@ -362,13 +362,15 @@ export declare class Connection {
   outboundStream(): Promise<Stream>
   /** close the connection immediately */
   abort(): void
-  id(): number
   rtt(): number
+  id(): string
+  remoteMultiaddr(): string
+  closed(): Promise<void>
 }
 export declare class Stream {
-  id: string
+  id(): string
   write(data: Uint8Array): Promise<void>
-  read(maxLength: number): Promise<Uint8Array>
+  read(maxLength: number): Promise<Uint8Array | null>
   finishWrite(): void
   resetWrite(): void
   stopRead(): void

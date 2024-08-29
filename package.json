@@ -24,18 +24,12 @@
     }
   },
   "license": "MIT",
-  "devDependencies": {
-    "@libp2p/logger": "^4.0.20",
-    "@libp2p/peer-id-factory": "^4.2.4",
-    "@napi-rs/cli": "^2.18.4",
-    "aegir": "^44.1.1"
-  },
   "engines": {
     "node": ">= 10"
   },
   "scripts": {
     "artifacts": "napi artifacts",
-    "build": "yarn build:rs && scripts/postbuild.sh && yarn build:ts",
+    "build": "yarn build:rs:debug && scripts/postbuild.sh && yarn build:ts",
     "build:ts": "aegir build",
     "build:rs": "napi build --platform --release --dts src/napi.d.ts --js src/napi.js",
     "build:rs:debug": "napi build --platform --dts src/napi.d.ts --js src/napi.js",
@@ -51,5 +45,12 @@
     "@libp2p/interface": "^1.7.0",
     "@multiformats/mafmt": "^12.1.6",
     "@multiformats/multiaddr": "^12.3.0"
+  },
+  "devDependencies": {
+    "@libp2p/interface-compliance-tests": "^5.4.12",
+    "@libp2p/logger": "^4.0.20",
+    "@libp2p/peer-id-factory": "^4.2.4",
+    "@napi-rs/cli": "^2.18.4",
+    "aegir": "^44.1.1"
   }
 }
