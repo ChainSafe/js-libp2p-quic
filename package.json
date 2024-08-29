@@ -36,12 +36,12 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "build": "yarn build:rs && scripts/postbuild.sh && yarn build:ts",
-    "build:ts": "aegir build -t node",
+    "build:ts": "aegir build",
     "build:rs": "napi build --platform --release --dts src/napi.d.ts --js src/napi.js",
     "build:rs:debug": "napi build --platform --dts src/napi.d.ts --js src/napi.js",
     "lint": "aegir lint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "aegir test",
+    "test": "aegir test -t node",
     "universal": "napi universal",
     "version": "napi version"
   },
