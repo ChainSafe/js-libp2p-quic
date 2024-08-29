@@ -2,6 +2,11 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
+const __dirname = new URL('.', import.meta.url).pathname;
+
 /* tslint:disable */
 /* eslint-disable */
 /* prettier-ignore */
@@ -36,10 +41,10 @@ switch (platform) {
   case 'android':
     switch (arch) {
       case 'arm64':
-        localFileExisted = existsSync(join(__dirname, '../libp2p-quic.android-arm64.node'))
+        localFileExisted = existsSync(join(__dirname, '../../libp2p-quic.android-arm64.node'))
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.android-arm64.node')
+            nativeBinding = require('../../libp2p-quic.android-arm64.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-android-arm64')
           }
@@ -48,10 +53,10 @@ switch (platform) {
         }
         break
       case 'arm':
-        localFileExisted = existsSync(join(__dirname, '../libp2p-quic.android-arm-eabi.node'))
+        localFileExisted = existsSync(join(__dirname, '../../libp2p-quic.android-arm-eabi.node'))
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.android-arm-eabi.node')
+            nativeBinding = require('../../libp2p-quic.android-arm-eabi.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-android-arm-eabi')
           }
@@ -67,11 +72,11 @@ switch (platform) {
     switch (arch) {
       case 'x64':
         localFileExisted = existsSync(
-          join(__dirname, '../libp2p-quic.win32-x64-msvc.node')
+          join(__dirname, '../../libp2p-quic.win32-x64-msvc.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.win32-x64-msvc.node')
+            nativeBinding = require('../../libp2p-quic.win32-x64-msvc.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-win32-x64-msvc')
           }
@@ -81,11 +86,11 @@ switch (platform) {
         break
       case 'ia32':
         localFileExisted = existsSync(
-          join(__dirname, '../libp2p-quic.win32-ia32-msvc.node')
+          join(__dirname, '../../libp2p-quic.win32-ia32-msvc.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.win32-ia32-msvc.node')
+            nativeBinding = require('../../libp2p-quic.win32-ia32-msvc.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-win32-ia32-msvc')
           }
@@ -95,11 +100,11 @@ switch (platform) {
         break
       case 'arm64':
         localFileExisted = existsSync(
-          join(__dirname, '../libp2p-quic.win32-arm64-msvc.node')
+          join(__dirname, '../../libp2p-quic.win32-arm64-msvc.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.win32-arm64-msvc.node')
+            nativeBinding = require('../../libp2p-quic.win32-arm64-msvc.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-win32-arm64-msvc')
           }
@@ -112,10 +117,10 @@ switch (platform) {
     }
     break
   case 'darwin':
-    localFileExisted = existsSync(join(__dirname, '../libp2p-quic.darwin-universal.node'))
+    localFileExisted = existsSync(join(__dirname, '../../libp2p-quic.darwin-universal.node'))
     try {
       if (localFileExisted) {
-        nativeBinding = require('../libp2p-quic.darwin-universal.node')
+        nativeBinding = require('../../libp2p-quic.darwin-universal.node')
       } else {
         nativeBinding = require('@chainsafe/libp2p-quic-darwin-universal')
       }
@@ -123,10 +128,10 @@ switch (platform) {
     } catch {}
     switch (arch) {
       case 'x64':
-        localFileExisted = existsSync(join(__dirname, '../libp2p-quic.darwin-x64.node'))
+        localFileExisted = existsSync(join(__dirname, '../../libp2p-quic.darwin-x64.node'))
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.darwin-x64.node')
+            nativeBinding = require('../../libp2p-quic.darwin-x64.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-darwin-x64')
           }
@@ -136,11 +141,11 @@ switch (platform) {
         break
       case 'arm64':
         localFileExisted = existsSync(
-          join(__dirname, '../libp2p-quic.darwin-arm64.node')
+          join(__dirname, '../../libp2p-quic.darwin-arm64.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.darwin-arm64.node')
+            nativeBinding = require('../../libp2p-quic.darwin-arm64.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-darwin-arm64')
           }
@@ -156,10 +161,10 @@ switch (platform) {
     if (arch !== 'x64') {
       throw new Error(`Unsupported architecture on FreeBSD: ${arch}`)
     }
-    localFileExisted = existsSync(join(__dirname, '../libp2p-quic.freebsd-x64.node'))
+    localFileExisted = existsSync(join(__dirname, '../../libp2p-quic.freebsd-x64.node'))
     try {
       if (localFileExisted) {
-        nativeBinding = require('../libp2p-quic.freebsd-x64.node')
+        nativeBinding = require('../../libp2p-quic.freebsd-x64.node')
       } else {
         nativeBinding = require('@chainsafe/libp2p-quic-freebsd-x64')
       }
@@ -172,11 +177,11 @@ switch (platform) {
       case 'x64':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-x64-musl.node')
+            join(__dirname, '../../libp2p-quic.linux-x64-musl.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-x64-musl.node')
+              nativeBinding = require('../../libp2p-quic.linux-x64-musl.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-x64-musl')
             }
@@ -185,11 +190,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-x64-gnu.node')
+            join(__dirname, '../../libp2p-quic.linux-x64-gnu.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-x64-gnu.node')
+              nativeBinding = require('../../libp2p-quic.linux-x64-gnu.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-x64-gnu')
             }
@@ -201,11 +206,11 @@ switch (platform) {
       case 'arm64':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-arm64-musl.node')
+            join(__dirname, '../../libp2p-quic.linux-arm64-musl.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-arm64-musl.node')
+              nativeBinding = require('../../libp2p-quic.linux-arm64-musl.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-arm64-musl')
             }
@@ -214,11 +219,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-arm64-gnu.node')
+            join(__dirname, '../../libp2p-quic.linux-arm64-gnu.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-arm64-gnu.node')
+              nativeBinding = require('../../libp2p-quic.linux-arm64-gnu.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-arm64-gnu')
             }
@@ -230,11 +235,11 @@ switch (platform) {
       case 'arm':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-arm-musleabihf.node')
+            join(__dirname, '../../libp2p-quic.linux-arm-musleabihf.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-arm-musleabihf.node')
+              nativeBinding = require('../../libp2p-quic.linux-arm-musleabihf.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-arm-musleabihf')
             }
@@ -243,11 +248,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-arm-gnueabihf.node')
+            join(__dirname, '../../libp2p-quic.linux-arm-gnueabihf.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-arm-gnueabihf.node')
+              nativeBinding = require('../../libp2p-quic.linux-arm-gnueabihf.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-arm-gnueabihf')
             }
@@ -259,11 +264,11 @@ switch (platform) {
       case 'riscv64':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-riscv64-musl.node')
+            join(__dirname, '../../libp2p-quic.linux-riscv64-musl.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-riscv64-musl.node')
+              nativeBinding = require('../../libp2p-quic.linux-riscv64-musl.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-riscv64-musl')
             }
@@ -272,11 +277,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '../libp2p-quic.linux-riscv64-gnu.node')
+            join(__dirname, '../../libp2p-quic.linux-riscv64-gnu.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('../libp2p-quic.linux-riscv64-gnu.node')
+              nativeBinding = require('../../libp2p-quic.linux-riscv64-gnu.node')
             } else {
               nativeBinding = require('@chainsafe/libp2p-quic-linux-riscv64-gnu')
             }
@@ -287,11 +292,11 @@ switch (platform) {
         break
       case 's390x':
         localFileExisted = existsSync(
-          join(__dirname, '../libp2p-quic.linux-s390x-gnu.node')
+          join(__dirname, '../../libp2p-quic.linux-s390x-gnu.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('../libp2p-quic.linux-s390x-gnu.node')
+            nativeBinding = require('../../libp2p-quic.linux-s390x-gnu.node')
           } else {
             nativeBinding = require('@chainsafe/libp2p-quic-linux-s390x-gnu')
           }
@@ -316,10 +321,10 @@ if (!nativeBinding) {
 
 const { QuinnConfig, ConnectionStats, SocketFamily, Server, Client, Connection, Stream } = nativeBinding
 
-module.exports.QuinnConfig = QuinnConfig
-module.exports.ConnectionStats = ConnectionStats
-module.exports.SocketFamily = SocketFamily
-module.exports.Server = Server
-module.exports.Client = Client
-module.exports.Connection = Connection
-module.exports.Stream = Stream
+export { QuinnConfig }
+export { ConnectionStats }
+export { SocketFamily }
+export { Server }
+export { Client }
+export { Connection }
+export { Stream }

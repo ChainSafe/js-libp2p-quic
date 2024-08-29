@@ -5,9 +5,7 @@ import type { Sink, Source } from 'it-stream-types'
 import { Uint8ArrayList } from 'uint8arraylist'
 import { dialFilter, listenFilter } from './filter.js'
 
-import * as napii from './napi.cjs'
-import type * as types from './napi'
-const napi = napii as typeof types
+import * as napi from './napi.js'
 
 export function quic(options?: Partial<QuicOptions>): (components: QuicComponents) => Transport {
   return (components) => new QuicTransport(components, {...defaultOptions, ...options})
@@ -22,7 +20,7 @@ export const defaultOptions: QuicOptions = {
   maxConnectionData: 15_000_000, 
 }
 
-export type QuicOptions = Omit<types.Config, "privateKeyProto"> & {}
+export type QuicOptions = Omit<napi.Config, "privateKeyProto"> & {}
 export type QuicComponents = {
   metrics?: Metrics
   logger: ComponentLogger
@@ -39,11 +37,11 @@ export class QuicTransport implements Transport {
   readonly log: Logger
   readonly components: QuicComponents
 
-  readonly #config: types.QuinnConfig
+  readonly #config: napi.QuinnConfig
 
   readonly #clients: {
-    ip4: types.Client
-    ip6: types.Client
+    ip4: napi.Client
+    ip6: napi.Client
   }
 
   readonly listenFilter: MultiaddrFilter
@@ -95,7 +93,7 @@ export class QuicTransport implements Transport {
 
 type QuicListenerInit = {
   options: QuicCreateListenerOptions
-  config: types.QuinnConfig
+  config: napi.QuinnConfig
   logger: ComponentLogger
 }
 
@@ -103,17 +101,17 @@ type QuicListenerState = {
   status: 'ready'
 } | {
   status: 'listening'
-  listener: types.Server
+  listener: napi.Server
   listenAddr: Multiaddr
   controller: AbortController
 } | {
   status: 'closed'
-  listener: types.Server
+  listener: napi.Server
   listenAddr: Multiaddr
 }
 
 export class QuicListener extends TypedEventEmitter<ListenerEvents> implements Listener {
-  readonly #config: types.QuinnConfig
+  readonly #config: napi.QuinnConfig
   readonly init: QuicListenerInit
   readonly options: QuicCreateListenerOptions
   readonly log: Logger
@@ -168,7 +166,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
           const connection = await Promise.race([
             aborted,
             this.state.listener.inboundConnection(),
-          ]) as types.Connection | undefined
+          ]) as napi.Connection | undefined
           if (connection == null) {
             break
           }
@@ -181,7 +179,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
   }
 
-  async onInboundConnection(connection: types.Connection): Promise<void> {
+  async onInboundConnection(connection: napi.Connection): Promise<void> {
     const maConn = new QuicConnection({
       connection,
       logger: this.init.logger,
@@ -203,12 +201,12 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
 }
 
 type QuicConnectionInit = {
-  connection: types.Connection
+  connection: napi.Connection
   logger: ComponentLogger
 }
 
 type QuicStreamMuxerFactoryInit = {
-  connection: types.Connection
+  connection: napi.Connection
   logger: ComponentLogger
 }
 
@@ -216,7 +214,7 @@ type QuicStreamMuxerFactoryInit = {
  * Each stream muxer factory is only configured for a single connection
  */
 export class QuicStreamMuxerFactory implements StreamMuxerFactory {
-  #connection: types.Connection
+  #connection: napi.Connection
   init: QuicStreamMuxerFactoryInit
   protocol: string = 'quic'
 
@@ -235,12 +233,12 @@ export class QuicStreamMuxerFactory implements StreamMuxerFactory {
 }
 
 type QuicStreamMuxerInit = StreamMuxerInit & {
-  connection: types.Connection
+  connection: napi.Connection
   logger: ComponentLogger
 }
 
 class QuicStreamMuxer implements StreamMuxer {
-  #connection: types.Connection
+  #connection: napi.Connection
   init: QuicStreamMuxerInit
   log: Logger
 
@@ -264,7 +262,7 @@ class QuicStreamMuxer implements StreamMuxer {
       const stream = await Promise.race([
         aborted,
         this.#connection.inboundStream()
-      ]) as types.Stream | undefined
+      ]) as napi.Stream | undefined
       if (stream == null) {
         break
       }
@@ -277,7 +275,7 @@ class QuicStreamMuxer implements StreamMuxer {
     }
   }
 
-  private onInboundStream = (str: types.Stream) => {
+  private onInboundStream = (str: napi.Stream) => {
     const stream = new QuicStream({
       stream: str,
       direction: 'inbound',
@@ -311,7 +309,7 @@ class QuicStreamMuxer implements StreamMuxer {
 }
 
 export class QuicConnection implements MultiaddrConnection {
-  readonly #connection: types.Connection
+  readonly #connection: napi.Connection
 
   readonly log: Logger
   readonly remoteAddr: Multiaddr
@@ -336,13 +334,13 @@ export class QuicConnection implements MultiaddrConnection {
 }
 
 type QuicStreamInit = {
-  stream: types.Stream
+  stream: napi.Stream
   direction: Direction
   logger: ComponentLogger
 }
 
 export class QuicStream implements Stream {
-  readonly #stream: types.Stream
+  readonly #stream: napi.Stream
 
   readonly id: string
   readonly direction: Direction
