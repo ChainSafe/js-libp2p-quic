@@ -108,6 +108,7 @@ type QuicListenerState = {
   listener: napi.Server
   listenAddr: Multiaddr
   controller: AbortController
+  connections: Set<Connection>
 } | {
   status: 'closed'
 }
@@ -145,6 +146,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       listener,
       listenAddr: multiaddr,
       controller,
+      connections: new Set(),
     }
     void this.awaitInboundConnections()
     this.safeDispatchEvent('listening')
@@ -154,6 +156,10 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   async close(): Promise<void> {
     if (this.state.status === 'listening') {
       this.state.controller.abort()
+      for (const conn of this.state.connections) {
+        conn.abort(new Error('listener closed'));
+      }
+      this.state.connections.clear()
       await this.state.listener.abort()
       const listenAddr = this.state.listenAddr
       this.state = { status: 'closed' }
@@ -188,6 +194,11 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   }
 
   async onInboundConnection(connection: napi.Connection): Promise<void> {
+    if (this.state.status !== 'listening') {
+      connection.abort()
+      return
+    }
+
     const maConn = new QuicConnection({
       connection,
       logger: this.init.logger,
@@ -203,6 +214,12 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       }),
     })
 
+    this.state.connections.add(conn)
+    maConn.addEventListener('close', () => {
+      if (this.state.status === 'listening') {
+        this.state.connections.delete(conn)
+      }
+    }, { once: true })
     this.safeDispatchEvent('connection', { detail: conn })
     this.options.handler?.(conn)
   }
@@ -326,7 +343,11 @@ class QuicStreamMuxer implements StreamMuxer {
   }
 }
 
-export class QuicConnection implements MultiaddrConnection {
+type QuicConnectionEvents = {
+  'close': CustomEvent
+}
+
+export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> implements MultiaddrConnection {
   readonly #connection: napi.Connection
 
   readonly log: Logger
@@ -339,6 +360,8 @@ export class QuicConnection implements MultiaddrConnection {
   sink: Sink<AsyncGenerator<Uint8Array | Uint8ArrayList>> = async function* () {}
 
   constructor(init: QuicConnectionInit) {
+    super()
+
     this.#connection = init.connection
     this.log = init.logger.forComponent('libp2p:quic:connection')
     this.remoteAddr = multiaddr(this.#connection.remoteMultiaddr())
@@ -349,11 +372,13 @@ export class QuicConnection implements MultiaddrConnection {
     this.#connection.abort()
 
     this.log('closed', this.#connection.id())
+    this.safeDispatchEvent('close')
   }
   abort(err: Error): void {
     this.#connection.abort()
 
     this.log('aborted', this.#connection.id())
+    this.safeDispatchEvent('close')
   }
 }
 

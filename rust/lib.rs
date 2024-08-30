@@ -9,6 +9,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 mod config;
+mod socket;
 mod stats;
 
 #[napi]
@@ -19,6 +20,7 @@ pub enum SocketFamily {
 
 #[napi]
 pub struct Server {
+  socket: Arc<socket::UdpSocket>,
   endpoint: quinn::Endpoint,
 }
 
@@ -29,13 +31,14 @@ impl Server {
     let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
     let socket_addr = SocketAddr::new(ip_addr, port);
     let socket = std::net::UdpSocket::bind(socket_addr)?;
-    let endpoint = quinn::Endpoint::new(
+    let socket = socket::UdpSocket::wrap_udp_socket(socket)?;
+    let endpoint = quinn::Endpoint::new_with_abstract_socket(
       config.endpoint_config.clone(),
       Some(config.server_config.clone()),
-      socket,
+      socket.clone(),
       Arc::new(quinn::TokioRuntime),
     )?;
-    Ok(Self { endpoint })
+    Ok(Self { socket, endpoint })
   }
 
   #[napi]
@@ -52,6 +55,7 @@ impl Server {
   pub async unsafe fn abort(&mut self) {
     self.endpoint.close(0u8.into(), b"");
     self.endpoint.wait_idle().await;
+    self.socket.unbind().await;
   }
 }
 
