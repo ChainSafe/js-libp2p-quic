@@ -473,11 +473,12 @@ export class QuicStream implements Stream {
   async * _source (): AsyncGenerator<Uint8ArrayList> {
     try {
       while (true) {
-        const chunk = await this.#stream.read(MAX_CHUNK_SIZE)
-        if (chunk == null) {
+        const chunk = Buffer.allocUnsafe(CHUNK_SIZE)
+        const length = await this.#stream.read(chunk)
+        if (length == null) {
           break
         }
-        yield new Uint8ArrayList(chunk)
+        yield new Uint8ArrayList(chunk.subarray(0, length))
       }
     } finally {
       await this.closeRead()
@@ -498,5 +499,5 @@ export class QuicStream implements Stream {
   }
 }
 
-export const MAX_CHUNK_SIZE = 2 ** 16 - 1
+export const CHUNK_SIZE = 4096
 

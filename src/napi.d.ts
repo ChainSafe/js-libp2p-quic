@@ -370,7 +370,7 @@ export declare class Connection {
 export declare class Stream {
   id(): string
   write(data: Uint8Array): Promise<void>
-  read(maxLength: number): Promise<Uint8Array | null>
+  read(buf: Uint8Array): Promise<number | null>
   finishWrite(): void
   resetWrite(): void
   stopRead(): void

@@ -181,14 +181,14 @@ impl Stream {
   }
 
   #[napi]
-  pub async unsafe fn read(&mut self, max_length: u32) -> Result<Option<Uint8Array>> {
+  pub async unsafe fn read(&mut self, mut buf: Uint8Array) -> Result<Option<u32>> {
     let chunk = self
       .recv
-      .read_chunk(max_length as usize, true)
+      .read(buf.as_mut())
       .await
       .map_err(to_err)?;
     match chunk {
-      Some(data) => Ok(Some(data.bytes.into())),
+      Some(len) => Ok(Some(len as u32)),
       None => Ok(None),
     }
   }
