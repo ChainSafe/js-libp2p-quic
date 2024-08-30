@@ -1,7 +1,7 @@
 import transportCompliance from '@libp2p/interface-compliance-tests/transport'
 import { multiaddr } from '@multiformats/multiaddr'
 
-import { quic } from '../src/index.js'
+import { quic, QuicTransport } from '../src/index.js'
 import { createComponents } from './util.js'
 
 describe('Interface compliance tests', () => {
@@ -16,10 +16,18 @@ describe('Interface compliance tests', () => {
         multiaddr('/ip6/::/udp/9094/quic-v1'),
       ]
 
+      const dial = QuicTransport.prototype.dial
       // Used by the dial tests to simulate a delayed connect
       const connector = {
-        delay (delayMs: number) {},
-        restore () {}
+        delay (delayMs: number) {
+          QuicTransport.prototype.dial = async function (...args) {
+            await new Promise((resolve) => setTimeout(resolve, delayMs))
+            return dial.bind(this)(...args)
+          }
+        },
+        restore () {
+          QuicTransport.prototype.dial = dial
+        }
       }
 
       return { dialer: transport, listener: transport, listenAddrs: addrs, dialAddrs: addrs, connector }

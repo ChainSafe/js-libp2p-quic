@@ -1,4 +1,4 @@
-import { transportSymbol, TypedEventEmitter, type AbortOptions, type ComponentLogger, type Connection, type ConnectionStatus, type ConnectionTimeline, type CreateListenerOptions, type DialTransportOptions, type Direction, type Listener, type ListenerEvents, type Logger, type Metrics, type MultiaddrConnection, type MultiaddrConnectionTimeline, type MultiaddrFilter, type NewStreamOptions, type PeerId, type PrivateKey, type ReadStatus, type Stream, type StreamMuxer, type StreamMuxerFactory, type StreamMuxerInit, type StreamStatus, type StreamTimeline, type Transport, type WriteStatus } from '@libp2p/interface'
+import { AbortError, transportSymbol, TypedEventEmitter, type AbortOptions, type ComponentLogger, type Connection, type ConnectionStatus, type ConnectionTimeline, type CreateListenerOptions, type DialTransportOptions, type Direction, type Listener, type ListenerEvents, type Logger, type Metrics, type MultiaddrConnection, type MultiaddrConnectionTimeline, type MultiaddrFilter, type NewStreamOptions, type PeerId, type PrivateKey, type ReadStatus, type Stream, type StreamMuxer, type StreamMuxerFactory, type StreamMuxerInit, type StreamStatus, type StreamTimeline, type Transport, type WriteStatus } from '@libp2p/interface'
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr'
 import { marshalPrivateKey } from '@libp2p/crypto/keys'
 import type { Sink, Source } from 'it-stream-types'
@@ -67,6 +67,10 @@ export class QuicTransport implements Transport {
   }
 
   async dial(ma: Multiaddr, options: QuicDialOptions): Promise<Connection> {
+    if (options.signal?.aborted) {
+      throw new AbortError()
+    }
+
     this.log('dialing', ma.toString())
     const addr = ma.nodeAddress()
     const dialer = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
