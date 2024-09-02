@@ -5,6 +5,9 @@ import { quic, QuicTransport } from '../src/index.js'
 import { createComponents } from './util.js'
 
 describe('Interface compliance tests', () => {
+  // Fails these listener tests:
+  // - close listener with connections, through timeout
+  // - should not handle connection if upgradeInbound throws
   transportCompliance({
     async setup () {
       const transport = quic()(await createComponents())
