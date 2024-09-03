@@ -3,8 +3,9 @@
 
 import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
-import { quic, type QuicComponents } from '../src/index.js'
+import { quic } from '../src/index.js'
 import { createComponents } from './util.js'
+import type { QuicComponents } from '../src/transport.js'
 
 describe('Quic Transport', () => {
   let components: QuicComponents

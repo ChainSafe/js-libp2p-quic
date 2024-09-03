@@ -1,7 +1,8 @@
 import transportCompliance from '@libp2p/interface-compliance-tests/transport'
 import { multiaddr } from '@multiformats/multiaddr'
 
-import { quic, QuicTransport } from '../src/index.js'
+import { quic } from '../src/index.js'
+import { QuicTransport } from '../src/transport.js'
 import { createComponents } from './util.js'
 
 describe('Interface compliance tests', () => {
