@@ -1,3 +1,32 @@
+/**
+ * @packageDocumentation
+ *
+ * A [libp2p transport](https://docs.libp2p.io/concepts/transports/overview/) based on the QUIC networking stack.
+ *
+ * @example
+ *
+ * ```TypeScript
+ * import { createLibp2p } from 'libp2p'
+ * import { quic } from '@chainsafe/libp2p-quic'
+ * import { multiaddr } from '@multiformats/multiaddr'
+ *
+ * const node = await createLibp2p({
+ *   transports: [
+ *     quic()
+ *   ]
+ * })
+ *
+ * const ma = multiaddr('/ip4/123.123.123.123/udp/1234/quic-v1')
+ *
+ * // dial a TCP connection, timing out after 10 seconds
+ * const connection = await node.dial(ma, {
+ *   signal: AbortSignal.timeout(10_000)
+ * })
+ *
+ * // use connection...
+ * ```
+ */
+
 import { AbortError, transportSymbol, TypedEventEmitter, type AbortOptions, type ComponentLogger, type Connection, type ConnectionStatus, type ConnectionTimeline, type CreateListenerOptions, type DialTransportOptions, type Direction, type Listener, type ListenerEvents, type Logger, type Metrics, type MultiaddrConnection, type MultiaddrConnectionTimeline, type MultiaddrFilter, type NewStreamOptions, type PeerId, type PrivateKey, type ReadStatus, type Stream, type StreamMuxer, type StreamMuxerFactory, type StreamMuxerInit, type StreamStatus, type StreamTimeline, type Transport, type WriteStatus } from '@libp2p/interface'
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr'
 import { marshalPrivateKey } from '@libp2p/crypto/keys'
