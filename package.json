@@ -1,6 +1,8 @@
 {
   "name": "@chainsafe/libp2p-quic",
   "version": "0.0.0",
+  "description": "A QUIC transport for libp2p",
+  "license": "MIT",
   "type": "module",
   "files": [
     "dist"
@@ -26,7 +28,6 @@
       ]
     }
   },
-  "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
@@ -38,13 +39,15 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ChainSafe/js-libp2p-quic"
-    },
+  },
+  "homepage": "https://github.com/ChainSafe/js-libp2p-quic",
   "scripts": {
     "artifacts": "napi artifacts",
     "build": "yarn build:rs:debug && scripts/postbuild.sh && yarn build:ts",
     "build:ts": "aegir build",
     "build:rs": "napi build --platform --release --dts src/napi.d.ts --js src/napi.js",
     "build:rs:debug": "napi build --platform --dts src/napi.d.ts --js src/napi.js",
+    "docs": "aegir docs",
     "lint": "aegir lint",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "aegir test -t node",
