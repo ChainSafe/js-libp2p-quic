@@ -57,6 +57,17 @@ impl Server {
     self.endpoint.wait_idle().await;
     self.socket.unbind().await;
   }
+
+  #[napi]
+  pub fn stats(&self) -> stats::EndpointStats {
+    let stats = self.endpoint.stats();
+    stats::EndpointStats::new(
+      stats.accepted_handshakes,
+      stats.outgoing_handshakes,
+      stats.refused_handshakes,
+      stats.ignored_handshakes,
+    )
+  }
 }
 
 #[napi]
@@ -96,6 +107,17 @@ impl Client {
   #[napi]
   pub fn abort(&self) {
     self.endpoint.close(0u8.into(), b"");
+  }
+
+  #[napi]
+  pub fn stats(&self) -> stats::EndpointStats {
+    let stats = self.endpoint.stats();
+    stats::EndpointStats::new(
+      stats.accepted_handshakes,
+      stats.outgoing_handshakes,
+      stats.refused_handshakes,
+      stats.ignored_handshakes,
+    )
   }
 }
 
@@ -155,6 +177,11 @@ impl Connection {
   #[napi]
   pub async fn closed(&self) -> () {
     self.connection.closed().await;
+  }
+
+  #[napi]
+  pub fn stats(&self) -> stats::ConnectionStats {
+    self.connection.stats().into()
   }
 }
 

@@ -6,6 +6,36 @@ use napi_derive::napi;
 // Are they all useful? who knows, but we expose them all
 
 #[napi]
+pub struct EndpointStats {
+  /// Cummulative number of Quic handshakes accepted by this Endpoint
+  pub accepted_handshakes: u32,
+  /// Cummulative number of Quic handshakees sent from this Endpoint
+  pub outgoing_handshakes: u32,
+  /// Cummulative number of Quic handshakes refused on this Endpoint
+  pub refused_handshakes: u32,
+  /// Cummulative number of Quic handshakes ignored on this Endpoint
+  pub ignored_handshakes: u32,
+}
+
+impl EndpointStats {
+  // quinn::endpoint::EndpointStats isn't public :(
+  // so we can't implement From
+  pub fn new(
+    accepted_handshakes: u64,
+    outgoing_handshakes: u64,
+    refused_handshakes: u64,
+    ignored_handshakes: u64,
+  ) -> Self {
+    Self {
+      accepted_handshakes: accepted_handshakes as u32,
+      outgoing_handshakes: outgoing_handshakes as u32,
+      refused_handshakes: refused_handshakes as u32,
+      ignored_handshakes: ignored_handshakes as u32,
+    }
+  }
+}
+
+#[napi]
 pub struct ConnectionStats {
   // UDP statistics
   /// Statistics about UDP datagrams transmitted on a connection

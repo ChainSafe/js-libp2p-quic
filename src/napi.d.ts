@@ -44,6 +44,16 @@ export const enum SocketFamily {
 export declare class QuinnConfig {
   constructor(config: Config)
 }
+export declare class EndpointStats {
+  /** Cummulative number of Quic handshakes accepted by this Endpoint */
+  acceptedHandshakes: number
+  /** Cummulative number of Quic handshakees sent from this Endpoint */
+  outgoingHandshakes: number
+  /** Cummulative number of Quic handshakes refused on this Endpoint */
+  refusedHandshakes: number
+  /** Cummulative number of Quic handshakes ignored on this Endpoint */
+  ignoredHandshakes: number
+}
 export declare class ConnectionStats {
   /**
    * Statistics about UDP datagrams transmitted on a connection
@@ -351,11 +361,13 @@ export declare class Server {
   constructor(config: QuinnConfig, ip: string, port: number)
   inboundConnection(): Promise<Connection>
   abort(): Promise<void>
+  stats(): EndpointStats
 }
 export declare class Client {
   constructor(config: QuinnConfig, family: SocketFamily)
   outboundConnection(ip: string, port: number): Promise<Connection>
   abort(): void
+  stats(): EndpointStats
 }
 export declare class Connection {
   inboundStream(): Promise<Stream>
@@ -366,6 +378,7 @@ export declare class Connection {
   id(): string
   remoteMultiaddr(): string
   closed(): Promise<void>
+  stats(): ConnectionStats
 }
 export declare class Stream {
   id(): string

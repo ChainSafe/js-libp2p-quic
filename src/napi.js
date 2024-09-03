@@ -319,9 +319,10 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { QuinnConfig, ConnectionStats, SocketFamily, Server, Client, Connection, Stream } = nativeBinding
+const { QuinnConfig, EndpointStats, ConnectionStats, SocketFamily, Server, Client, Connection, Stream } = nativeBinding
 
 export { QuinnConfig }
+export { EndpointStats }
 export { ConnectionStats }
 export { SocketFamily }
 export { Server }
