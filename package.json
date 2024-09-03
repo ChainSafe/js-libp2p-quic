@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "*.node"
   ],
   "types": "dist/src/index.d.ts",
   "exports": {
