@@ -47,6 +47,7 @@
     "build:ts": "aegir build",
     "build:rs": "napi build --platform --release --dts src/napi.d.ts --js src/napi.js",
     "build:rs:debug": "napi build --platform --dts src/napi.d.ts --js src/napi.js",
+    "dep-check": "aegir dep-check -P test -P src/napi.js",
     "docs": "aegir docs",
     "lint": "aegir lint",
     "prepublishOnly": "napi prepublish -t npm",
@@ -59,12 +60,13 @@
     "@libp2p/crypto": "^4.1.9",
     "@libp2p/interface": "^1.7.0",
     "@multiformats/mafmt": "^12.1.6",
-    "@multiformats/multiaddr": "^12.3.0"
+    "@multiformats/multiaddr": "^12.3.0",
+    "it-stream-types": "^2.0.1",
+    "uint8arraylist": "^2.4.8"
   },
   "devDependencies": {
     "@libp2p/interface-compliance-tests": "^5.4.12",
     "@libp2p/logger": "^4.0.20",
-    "@libp2p/peer-id-factory": "^4.2.4",
     "@napi-rs/cli": "^2.18.4",
     "aegir": "^44.1.1"
   }
