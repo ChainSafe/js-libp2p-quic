@@ -164,14 +164,30 @@ impl Connection {
   pub fn remote_multiaddr(&self) -> String {
     let remote_addr = self.connection.remote_address();
     format!(
-      "/{}/{}/udp/{}/quic-v1",
+      "/{}/{}/udp/{}/quic-v1/p2p/{}",
       match remote_addr {
         SocketAddr::V4(_) => "ip4",
         SocketAddr::V6(_) => "ip6",
       },
       remote_addr.ip(),
-      remote_addr.port()
+      remote_addr.port(),
+      self.peer_id().to_base58()
     )
+  }
+
+  // taken from rust-libp2p-quic
+  pub fn peer_id(&self) -> libp2p_identity::PeerId {
+    let identity = self.connection
+      .peer_identity()
+      .expect("connection got identity because it passed TLS handshake; qed");
+    let certificates: Box<Vec<rustls::pki_types::CertificateDer>> =
+      identity.downcast().expect("we rely on rustls feature; qed");
+    let end_entity = certificates
+      .first()
+      .expect("there should be exactly one certificate; qed");
+    let p2p_cert = libp2p_tls::certificate::parse(end_entity)
+      .expect("the certificate was validated during TLS handshake; qed");
+    p2p_cert.peer_id()
   }
 
   #[napi]
