@@ -37,6 +37,7 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
     this.#connection = init.connection
     this.log = init.logger.forComponent('libp2p:quic:connection')
     this.remoteAddr = multiaddr(this.#connection.remoteMultiaddr())
+    this.metrics = init.metrics
 
     this.log('new', init.direction, this.#connection.id())
   }
