@@ -1,6 +1,6 @@
 import { AbortError, transportSymbol } from '@libp2p/interface'
 import { marshalPrivateKey } from '@libp2p/crypto/keys'
-import type { ComponentLogger, Connection, DialTransportOptions, Listener, Logger, Metrics, MultiaddrFilter, PrivateKey, Transport } from '@libp2p/interface'
+import type { ComponentLogger, Connection, CounterGroup, DialTransportOptions, Listener, Logger, Metrics, MultiaddrFilter, PrivateKey, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 import * as napi from './napi.js'
@@ -19,12 +19,17 @@ export type QuicComponents = {
 
 export type QuicDialOptions = DialTransportOptions & {}
 
+export type QuicTransportMetrics = {
+  events: CounterGroup
+}
+
 export class QuicTransport implements Transport {
   readonly [Symbol.toStringTag]: string = "quic"
   readonly [transportSymbol] = true
 
   readonly log: Logger
   readonly components: QuicComponents
+  readonly metrics?: QuicTransportMetrics
 
   readonly #config: napi.QuinnConfig
 
@@ -49,6 +54,15 @@ export class QuicTransport implements Transport {
       ip6: new napi.Client(this.#config, 1),
     }
 
+    if (this.components.metrics != null) {
+      this.metrics = {
+        events: this.components.metrics?.registerCounterGroup('libp2p_quic_dialer_events_total', {
+          label: 'event',
+          help: 'Total count of QUIC dialer events by type',
+        }),
+      }
+    }
+
     this.listenFilter = listenFilter
     this.dialFilter = dialFilter
 
@@ -63,11 +77,18 @@ export class QuicTransport implements Transport {
     this.log('dialing', ma.toString())
     const addr = ma.nodeAddress()
     const dialer = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
-    const connection = await dialer?.outboundConnection(addr.address, addr.port)
+
+    const dialPromise = dialer.outboundConnection(addr.address, addr.port)
+    dialPromise
+      .then(() => this.metrics?.events.increment({ connect: true }))
+      .catch(() => this.metrics?.events.increment({ error: true }))
+    const connection = await dialPromise
+
     const maConn = new QuicConnection({
       connection,
       logger: this.components.logger,
       direction: 'outbound',
+      metrics: this.metrics?.events,
     })
     return options.upgrader.upgradeOutbound(maConn, {
       skipEncryption: true,
@@ -84,6 +105,7 @@ export class QuicTransport implements Transport {
       options,
       config: this.#config,
       logger: this.components.logger,
+      metrics: this.components.metrics,
     })
   }
 }

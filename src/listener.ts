@@ -1,5 +1,5 @@
 import { TypedEventEmitter } from '@libp2p/interface'
-import type { ComponentLogger, Connection, CreateListenerOptions, Listener, ListenerEvents, Logger } from '@libp2p/interface'
+import type { ComponentLogger, Connection, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 import * as napi from './napi.js'
@@ -8,10 +8,15 @@ import { QuicStreamMuxerFactory } from './stream-muxer.js'
 
 export type QuicCreateListenerOptions = CreateListenerOptions & {}
 
+export type QuicListenerMetrics = {
+  events: CounterGroup
+}
+
 type QuicListenerInit = {
   options: QuicCreateListenerOptions
   config: napi.QuinnConfig
   logger: ComponentLogger
+  metrics?: Metrics
 }
 
 type QuicListenerState = {
@@ -31,6 +36,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   readonly init: QuicListenerInit
   readonly options: QuicCreateListenerOptions
   readonly log: Logger
+  readonly metrics?: QuicListenerMetrics
 
   state: QuicListenerState = { status: 'ready' }
 
@@ -40,6 +46,15 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     this.init = init
     this.options = init.options
     this.log = init.logger.forComponent('libp2p:quic:listener')
+
+    if (init.metrics != null) {
+      this.metrics = {
+        events: init.metrics.registerMetricGroup('libp2p_quic_listener_events_total', {
+          label: 'address',
+          help: 'Total count of QUIC listener events by type'
+        })
+      }
+    }
 
     this.log('new')
   }
@@ -90,9 +105,13 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       })
       while (true) {
         try {
+          const listenerPromise = this.state.listener.inboundConnection()
+          listenerPromise
+            .then(() => this.metrics?.events.increment({ connect: true }))
+            .catch(() => this.metrics?.events.increment({ error: true }))
           const connection = await Promise.race([
             aborted,
-            this.state.listener.inboundConnection(),
+            listenerPromise,
           ]) as napi.Connection | undefined
           if (connection == null) {
             break
@@ -120,6 +139,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       connection,
       logger: this.init.logger,
       direction: 'inbound',
+      metrics: this.metrics?.events,
     })
 
     try {

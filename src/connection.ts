@@ -2,7 +2,7 @@ import { TypedEventEmitter } from '@libp2p/interface'
 import { multiaddr, type Multiaddr } from '@multiformats/multiaddr'
 import { Uint8ArrayList } from 'uint8arraylist'
 
-import type { AbortOptions, ComponentLogger, Direction, Logger, MultiaddrConnection, MultiaddrConnectionTimeline } from '@libp2p/interface'
+import type { AbortOptions, ComponentLogger, CounterGroup, Direction, Logger, MultiaddrConnection, MultiaddrConnectionTimeline } from '@libp2p/interface'
 import type { Sink } from 'it-stream-types'
 
 import * as napi from './napi.js'
@@ -11,6 +11,7 @@ type QuicConnectionInit = {
   connection: napi.Connection
   logger: ComponentLogger
   direction: Direction
+  metrics?: CounterGroup
 }
 
 type QuicConnectionEvents = {
@@ -22,6 +23,7 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
 
   readonly log: Logger
   readonly remoteAddr: Multiaddr
+  readonly metrics?: CounterGroup
 
   timeline: MultiaddrConnectionTimeline = {
     open: Date.now(),
@@ -43,6 +45,7 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
 
     this.timeline.close = Date.now()
     this.log('%s closed', this.#connection.id())
+    this.metrics?.increment({close: true})
     this.safeDispatchEvent('close')
   }
   abort(err: Error): void {
@@ -50,6 +53,7 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
 
     this.timeline.close = Date.now()
     this.log('%s aborted', this.#connection.id())
+    this.metrics?.increment({abort: true})
     this.safeDispatchEvent('close')
   }
 }
