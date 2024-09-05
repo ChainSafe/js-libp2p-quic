@@ -1,12 +1,12 @@
 #![deny(clippy::all)]
 
 use std::{
-  net::{IpAddr, SocketAddr},
-  sync::Arc,
+  net::{IpAddr, SocketAddr}, sync::Arc, vec
 };
 
-use napi::bindgen_prelude::*;
+use napi::{bindgen_prelude::*, JsNumber, JsUndefined};
 use napi_derive::napi;
+use quinn::SendStream;
 
 mod config;
 mod socket;
@@ -177,7 +177,8 @@ impl Connection {
 
   // taken from rust-libp2p-quic
   pub fn peer_id(&self) -> libp2p_identity::PeerId {
-    let identity = self.connection
+    let identity = self
+      .connection
       .peer_identity()
       .expect("connection got identity because it passed TLS handshake; qed");
     let certificates: Box<Vec<rustls::pki_types::CertificateDer>> =
@@ -205,6 +206,8 @@ impl Connection {
 pub struct Stream {
   send: quinn::SendStream,
   recv: quinn::RecvStream,
+  // send: Arc<quinn::SendStream>,
+  // recv: Arc<quinn::RecvStream>,
 }
 
 #[napi]
@@ -225,16 +228,32 @@ impl Stream {
 
   #[napi]
   pub async unsafe fn read(&mut self, mut buf: Uint8Array) -> Result<Option<u32>> {
-    let chunk = self
-      .recv
-      .read(buf.as_mut())
-      .await
-      .map_err(to_err)?;
+    let chunk = self.recv.read(buf.as_mut()).await.map_err(to_err)?;
     match chunk {
       Some(len) => Ok(Some(len as u32)),
       None => Ok(None),
     }
   }
+
+  #[napi]
+  pub async unsafe fn read2(&mut self) -> Result<Option<Uint8Array>> {
+    let mut buf = vec![0u8; 1024];
+    let chunk = self.recv.read(buf.as_mut()).await.map_err(to_err)?;
+    match chunk {
+      Some(len) => Ok(Some(Uint8Array::with_data_copied(&buf[..len as usize])),),
+      None => Ok(None),
+    }
+  }
+
+  #[napi]
+  pub async unsafe fn write2(&mut self, data: Vec<u8>) -> Result<()> {
+    self.send.write_all(&data).await.map_err(to_err)
+  }
+
+  // #[napi]
+  // pub fn write2(&self, data: Uint8Array) -> AsyncTask<Write> {
+  //   AsyncTask::new(Write { data, send: self.send.clone() })
+  // }
 
   #[napi]
   pub fn finish_write(&mut self) {
@@ -255,3 +274,54 @@ impl Stream {
 fn to_err<T: ToString>(str: T) -> napi::Error {
   napi::Error::new(Status::Unknown, str)
 }
+
+// struct Write {
+//   data: Uint8Array,
+//   send: Arc<SendStream>,
+// }
+
+// impl Task for Write {
+//   type Output = ();
+//   type JsValue = JsUndefined;
+
+//   fn compute(&mut self) -> Result<Self::Output> {
+//     block_on(async move {
+//       let x = Arc::make_mut(&mut self.send);
+//       x.write_all(&self.data).await.map_err(to_err)
+//     })
+//   }
+
+//   fn resolve(&mut self, env: Env, _output: Self::Output) -> Result<Self::JsValue> {
+//     env.get_undefined()
+//   }
+// }
+
+// struct Read {
+//   buf: Uint8Array,
+//   stream: Stream,
+// }
+
+// impl Task for Read {
+//   type Output = Option<u32>;
+//   type JsValue = Either<JsNumber, JsUndefined>;
+
+//   fn compute(&mut self) -> Result<Self::Output> {
+//     block_on(async move {
+//       let chunk = self.stream.recv.read(self.buf.as_mut()).await.map_err(to_err)?;
+//       match chunk {
+//         Some(len) => Ok(Some(len as u32)),
+//         None => Ok(None),
+//       }
+//     })
+//   }
+
+//   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+//     if let Some(output) = output {
+//       env.create_uint32(output).map(Either::A)
+//     } else {
+//       env.get_undefined().map(Either::B)
+//     }
+//   }
+// }
+
+// mod out;

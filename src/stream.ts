@@ -97,13 +97,19 @@ export class QuicStream implements Stream {
     try {
       while (true) {
         this.log.trace('', this.id, 'reading')
-        const chunk = Buffer.allocUnsafe(CHUNK_SIZE)
-        const length = await this.#stream.read(chunk)
-        if (length == null) {
+        // const chunk = Buffer.allocUnsafe(CHUNK_SIZE)
+        // const length = await this.#stream.read(chunk)
+        // if (length == null) {
+        //   this.log.trace('', this.id, 'no more data')
+        //   break
+        // }
+        // yield new Uint8ArrayList(chunk.subarray(0, length))
+        const chunk = await this.#stream.read2()
+        if (chunk == null) {
           this.log.trace('', this.id, 'no more data')
           break
         }
-        yield new Uint8ArrayList(chunk.subarray(0, length))
+        yield new Uint8ArrayList(chunk)
         this.log.trace('', this.id, 'read', length, 'bytes')
       }
     } catch (e) {
