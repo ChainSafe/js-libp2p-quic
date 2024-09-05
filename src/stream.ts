@@ -123,9 +123,9 @@ export class QuicStream implements Stream {
       for await (const chunk of source) {
         this.log.trace('', this.id, 'writing', chunk.length, 'bytes')
         if (chunk instanceof Uint8ArrayList) {
-          await this.#stream.write(chunk.subarray())
+          await this.#stream.write2([...chunk.subarray()])
         } else {
-          await this.#stream.write(chunk)
+          await this.#stream.write2([...chunk])
         }
         this.log.trace('', this.id, 'wrote', chunk.length, 'bytes')
       }
