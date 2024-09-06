@@ -4,9 +4,10 @@ use std::{
   net::{IpAddr, SocketAddr}, sync::Arc, vec
 };
 
-use napi::{bindgen_prelude::*, JsNumber, JsUndefined};
+use napi::{bindgen_prelude::*, JsArrayBufferValue, JsBuffer, JsNumber, JsObject, JsTypedArray, JsUndefined, Ref};
 use napi_derive::napi;
 use quinn::SendStream;
+use tokio::sync::Mutex;
 
 mod config;
 mod socket;
@@ -204,7 +205,7 @@ impl Connection {
 
 #[napi]
 pub struct Stream {
-  send: quinn::SendStream,
+  send: Arc<Mutex<quinn::SendStream>>,
   recv: quinn::RecvStream,
   // send: Arc<quinn::SendStream>,
   // recv: Arc<quinn::RecvStream>,
@@ -213,17 +214,19 @@ pub struct Stream {
 #[napi]
 impl Stream {
   pub fn new(send: quinn::SendStream, recv: quinn::RecvStream) -> Self {
-    Self { send, recv }
+    Self { send: Arc::new(Mutex::new(send)), recv }
   }
 
   #[napi]
-  pub fn id(&self) -> String {
-    self.send.id().index().to_string()
+  pub fn id(&self) -> Result<String> {
+    let send = self.send.try_lock().map_err(to_err)?;
+    Ok(send.id().index().to_string())
   }
 
   #[napi]
   pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
-    self.send.write_all(&data).await.map_err(to_err)
+    // self.send.write_all(&data).await.map_err(to_err)
+    Ok(())
   }
 
   #[napi]
@@ -246,23 +249,27 @@ impl Stream {
   }
 
   #[napi]
-  pub async unsafe fn write2(&mut self, data: Vec<u8>) -> Result<()> {
-    self.send.write_all(&data).await.map_err(to_err)
+  pub fn write2(&mut self, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<AsyncTask<Write>> {
+    let data = data.into_value()?;
+    let byte_offset = data.byte_offset;
+    let length = data.length;
+    let data = data.arraybuffer.into_ref()?;
+    Ok(AsyncTask::new(Write {
+      data,
+      byte_offset,
+      length,
+      send: self.send.clone(),
+    }))
   }
 
-  // #[napi]
-  // pub fn write2(&self, data: Uint8Array) -> AsyncTask<Write> {
-  //   AsyncTask::new(Write { data, send: self.send.clone() })
-  // }
-
   #[napi]
-  pub fn finish_write(&mut self) {
-    let _ = self.send.finish();
+  pub async unsafe fn finish_write(&mut self) {
+    let _ = self.send.lock().await.finish();
   }
 
   #[napi]
-  pub fn reset_write(&mut self) {
-    let _ = self.send.reset(0u8.into());
+  pub async unsafe fn reset_write(&mut self) {
+    let _ = self.send.lock().await.reset(0u8.into());
   }
 
   #[napi]
@@ -275,26 +282,33 @@ fn to_err<T: ToString>(str: T) -> napi::Error {
   napi::Error::new(Status::Unknown, str)
 }
 
-// struct Write {
-//   data: Uint8Array,
-//   send: Arc<SendStream>,
-// }
+pub struct Write {
+  data: Ref<JsArrayBufferValue>,
+  byte_offset: usize,
+  length: usize,
+  send: Arc<Mutex<SendStream>>,
+}
 
-// impl Task for Write {
-//   type Output = ();
-//   type JsValue = JsUndefined;
+impl Task for Write {
+  type Output = ();
+  type JsValue = JsUndefined;
 
-//   fn compute(&mut self) -> Result<Self::Output> {
-//     block_on(async move {
-//       let x = Arc::make_mut(&mut self.send);
-//       x.write_all(&self.data).await.map_err(to_err)
-//     })
-//   }
+  fn compute(&mut self) -> Result<Self::Output> {
+    block_on(async move {
+      let mut send = self.send.lock().await;
+      send.write_all(&self.data[self.byte_offset..self.byte_offset+self.length]).await.map_err(to_err)
+    })
+  }
 
-//   fn resolve(&mut self, env: Env, _output: Self::Output) -> Result<Self::JsValue> {
-//     env.get_undefined()
-//   }
-// }
+  fn resolve(&mut self, env: Env, _output: Self::Output) -> Result<Self::JsValue> {
+    env.get_undefined()
+  }
+
+  fn finally(&mut self, env: Env) -> Result<()> {
+    self.data.unref(env)?;
+    Ok(())
+  }
+}
 
 // struct Read {
 //   buf: Uint8Array,
