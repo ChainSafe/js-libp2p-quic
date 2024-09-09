@@ -1,12 +1,12 @@
 #![deny(clippy::all)]
 
 use std::{
-  net::{IpAddr, SocketAddr}, sync::Arc, vec
+  cell::UnsafeCell, net::{IpAddr, SocketAddr}, sync::Arc, vec
 };
 
-use napi::{bindgen_prelude::*, JsArrayBufferValue, JsBuffer, JsNumber, JsObject, JsTypedArray, JsUndefined, Ref};
+use napi::{bindgen_prelude::*, JsArrayBufferValue, JsBuffer, JsBufferValue, JsNumber, JsObject, JsTypedArray, JsUndefined, Ref};
 use napi_derive::napi;
-use quinn::SendStream;
+use quinn::{RecvStream, SendStream};
 use tokio::sync::Mutex;
 
 mod config;
@@ -206,7 +206,7 @@ impl Connection {
 #[napi]
 pub struct Stream {
   send: Arc<Mutex<quinn::SendStream>>,
-  recv: quinn::RecvStream,
+  recv: Arc<Mutex<quinn::RecvStream>>,
   // send: Arc<quinn::SendStream>,
   // recv: Arc<quinn::RecvStream>,
 }
@@ -214,7 +214,7 @@ pub struct Stream {
 #[napi]
 impl Stream {
   pub fn new(send: quinn::SendStream, recv: quinn::RecvStream) -> Self {
-    Self { send: Arc::new(Mutex::new(send)), recv }
+    Self { send: Arc::new(Mutex::new(send)), recv: Arc::new(Mutex::new(recv)) }
   }
 
   #[napi]
@@ -230,7 +230,7 @@ impl Stream {
 
   #[napi]
   pub async unsafe fn read(&mut self, mut buf: Uint8Array) -> Result<Option<u32>> {
-    let chunk = self.recv.read(buf.as_mut()).await.map_err(to_err)?;
+    let chunk = self.recv.lock().await.read(buf.as_mut()).await.map_err(to_err)?;
     match chunk {
       Some(len) => Ok(Some(len as u32)),
       None => Ok(None),
@@ -240,11 +240,52 @@ impl Stream {
   #[napi]
   pub async unsafe fn read2(&mut self) -> Result<Option<Uint8Array>> {
     let mut buf = vec![0u8; 1024];
-    let chunk = self.recv.read(buf.as_mut()).await.map_err(to_err)?;
+    let chunk = self.recv.lock().await.read(buf.as_mut()).await.map_err(to_err)?;
     match chunk {
       Some(len) => Ok(Some(Uint8Array::with_data_copied(&buf[..len as usize])),),
       None => Ok(None),
     }
+  }
+
+  #[napi(ts_return_type = "Promise<number | undefined>")]
+  pub fn read3(&mut self, env: Env, #[napi(ts_arg_type = "Buffer")] data: JsBuffer) -> Result<JsObject> {
+    let data = data.into_ref()?;
+    let recv = self.recv.clone();
+
+    env.execute_tokio_future(async move {
+      // unsafe, but we know the data is not going to be modified by JS
+      let d = data.as_ref();
+      let data_mut = unsafe {
+        let ptr = d.as_ptr() as *mut u8;
+        std::slice::from_raw_parts_mut(ptr, d.len())
+      };
+      let mut recv = recv.lock().await;
+      let chunk = recv.read(
+        data_mut
+      ).await.map_err(to_err)?;
+      match chunk {
+        Some(len) => Ok((Some(len as u32), data)),
+        None => Ok((None, data)),
+      }
+    }, move |env, output| {
+      let (output, mut data) = output;
+
+      println!("{:?}", data.unref(*env)?);
+      if let Some(output) = output {
+        env.create_uint32(output).and_then(|n| Ok(n.into_unknown()))
+      } else {
+        env.get_undefined().and_then(|u| Ok(u.into_unknown()))
+      }
+    })
+  }
+
+  #[napi(ts_return_type = "Promise<number | undefined>")]
+  pub fn read4(&mut self, data: JsBuffer) -> AsyncTask<Read> {
+    let data = data.into_ref().unwrap();
+    AsyncTask::new(Read {
+      buf: data,
+      recv: self.recv.clone(),
+    })
   }
 
   #[napi]
@@ -289,8 +330,8 @@ impl Stream {
   }
 
   #[napi]
-  pub fn stop_read(&mut self) {
-    let _ = self.recv.stop(0u8.into());
+  pub async unsafe fn stop_read(&mut self) {
+    let _ = self.recv.lock().await.stop(0u8.into());
   }
 }
 
@@ -326,32 +367,43 @@ impl Task for Write {
   }
 }
 
-// struct Read {
-//   buf: Uint8Array,
-//   stream: Stream,
-// }
+pub struct Read {
+  buf: Ref<JsBufferValue>,
+  recv: Arc<Mutex<RecvStream>>,
+}
 
-// impl Task for Read {
-//   type Output = Option<u32>;
-//   type JsValue = Either<JsNumber, JsUndefined>;
+impl Task for Read {
+  type Output = Option<u32>;
+  type JsValue = Either<JsNumber, JsUndefined>;
 
-//   fn compute(&mut self) -> Result<Self::Output> {
-//     block_on(async move {
-//       let chunk = self.stream.recv.read(self.buf.as_mut()).await.map_err(to_err)?;
-//       match chunk {
-//         Some(len) => Ok(Some(len as u32)),
-//         None => Ok(None),
-//       }
-//     })
-//   }
+  fn compute(&mut self) -> Result<Self::Output> {
+    block_on(async move {
+      // unsafe, but we know the data is not going to be modified by JS
+      let d = self.buf.as_ref();
+      let data_mut = unsafe {
+        let ptr = d.as_ptr() as *mut u8;
+        std::slice::from_raw_parts_mut(ptr, d.len())
+      };
+      let chunk = self.recv.lock().await.read(data_mut).await.map_err(to_err)?;
+      match chunk {
+        Some(len) => Ok(Some(len as u32)),
+        None => Ok(None),
+      }
+    })
+  }
 
-//   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-//     if let Some(output) = output {
-//       env.create_uint32(output).map(Either::A)
-//     } else {
-//       env.get_undefined().map(Either::B)
-//     }
-//   }
-// }
+  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+    if let Some(output) = output {
+      env.create_uint32(output).map(Either::A)
+    } else {
+      env.get_undefined().map(Either::B)
+    }
+  }
+
+  fn finally(&mut self, env: Env) -> Result<()> {
+    self.buf.unref(env)?;
+    Ok(())
+  }
+}
 
 // mod out;
