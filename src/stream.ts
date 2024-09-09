@@ -110,7 +110,7 @@ export class QuicStream implements Stream {
           break
         }
         yield new Uint8ArrayList(chunk)
-        this.log.trace('', this.id, 'read', length, 'bytes')
+        this.log.trace('', this.id, 'read', chunk.length, 'bytes')
       }
     } catch (e) {
       this.log.error('source error', this.id, e)
@@ -123,9 +123,9 @@ export class QuicStream implements Stream {
       for await (const chunk of source) {
         this.log.trace('', this.id, 'writing', chunk.length, 'bytes')
         if (chunk instanceof Uint8ArrayList) {
-          await this.#stream.write2(chunk.subarray())
+          await this.#stream.write3(chunk.subarray())
         } else {
-          await this.#stream.write2(chunk)
+          await this.#stream.write3(chunk)
         }
         this.log.trace('', this.id, 'wrote', chunk.length, 'bytes')
       }

@@ -386,6 +386,7 @@ export declare class Stream {
   read(buf: Uint8Array): Promise<number | null>
   read2(): Promise<Uint8Array | null>
   write2(data: Uint8Array): Promise<unknown>
+  write3(data: Uint8Array): Promise<undefined>
   finishWrite(): Promise<void>
   resetWrite(): Promise<void>
   stopRead(): void

@@ -225,8 +225,7 @@ impl Stream {
 
   #[napi]
   pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
-    // self.send.write_all(&data).await.map_err(to_err)
-    Ok(())
+    self.send.lock().await.write_all(&data).await.map_err(to_err)
   }
 
   #[napi]
@@ -260,6 +259,23 @@ impl Stream {
       length,
       send: self.send.clone(),
     }))
+  }
+
+  #[napi(ts_return_type = "Promise<undefined>")]
+  pub fn write3(&mut self, env: Env, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<JsObject> {
+    let data = data.into_value()?;
+    let byte_offset = data.byte_offset;
+    let length = data.length;
+    let data = data.arraybuffer.into_ref()?;
+    let send = self.send.clone();
+    env.execute_tokio_future(async move {
+      let mut send = send.lock().await;
+      let _ = send.write_all(&data[byte_offset..byte_offset+length]).await.map_err(to_err);
+      Ok(data)
+    }, |env, mut data| {
+      data.unref(*env)?;
+      env.get_undefined()
+    })
   }
 
   #[napi]
