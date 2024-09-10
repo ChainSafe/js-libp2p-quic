@@ -123,8 +123,8 @@ export class QuicStream implements Stream {
   sink: Sink<Source<Uint8Array | Uint8ArrayList>, Promise<void>> = async (source) => {
     try {
       for await (const chunk of source) {
-        this.log.trace('', this.id, 'writing', chunk.length, 'bytes')
         const data = chunk instanceof Uint8ArrayList ? chunk.subarray() : chunk
+        this.log.trace('', this.id, 'writing', data.length, 'bytes')
         await this.#stream.write4(data)
         this.log.trace('', this.id, 'wrote', data.length, 'bytes')
       }
