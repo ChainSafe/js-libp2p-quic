@@ -382,13 +382,15 @@ export declare class Connection {
 }
 export declare class Stream {
   id(): string
-  write(data: Uint8Array): Promise<void>
   read(buf: Uint8Array): Promise<number | null>
   read2(): Promise<Uint8Array | null>
   read3(data: Buffer): Promise<number | undefined>
   read4(data: Buffer): Promise<number | undefined>
+  read5(data: Buffer): Promise<number | undefined>
+  write(data: Uint8Array): Promise<void>
   write2(data: Uint8Array): Promise<unknown>
   write3(data: Uint8Array): Promise<undefined>
+  write4(data: Uint8Array): Promise<undefined>
   finishWrite(): Promise<void>
   resetWrite(): Promise<void>
   stopRead(): Promise<void>

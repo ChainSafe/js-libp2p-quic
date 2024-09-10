@@ -224,11 +224,6 @@ impl Stream {
   }
 
   #[napi]
-  pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
-    self.send.lock().await.write_all(&data).await.map_err(to_err)
-  }
-
-  #[napi]
   pub async unsafe fn read(&mut self, mut buf: Uint8Array) -> Result<Option<u32>> {
     let chunk = self.recv.lock().await.read(buf.as_mut()).await.map_err(to_err)?;
     match chunk {
@@ -288,6 +283,39 @@ impl Stream {
     })
   }
 
+  #[napi(ts_return_type = "Promise<number | undefined>")]
+  pub fn read5(&mut self, env: Env, data: JsBuffer) -> Result<JsObject> {
+    let data = data.into_value()?;
+    let recv = self.recv.clone();
+
+    // unsafe, but we know the data is not going to be modified by JS
+    let data_mut = unsafe {
+      let ptr = data.as_ptr() as *mut u8;
+      std::slice::from_raw_parts_mut(ptr, data.len())
+    };
+    env.execute_tokio_future(async move {
+      let mut recv = recv.lock().await;
+      let chunk = recv.read(
+        data_mut
+      ).await.map_err(to_err)?;
+      match chunk {
+        Some(len) => Ok(Some(len as u32)),
+        None => Ok(None),
+      }
+    }, move |env, output| {
+      if let Some(output) = output {
+        env.create_uint32(output).and_then(|n| Ok(n.into_unknown()))
+      } else {
+        env.get_undefined().and_then(|u| Ok(u.into_unknown()))
+      }
+    })
+  }
+
+  #[napi]
+  pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
+    self.send.lock().await.write_all(&data).await.map_err(to_err)
+  }
+
   #[napi]
   pub fn write2(&mut self, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<AsyncTask<Write>> {
     let data = data.into_value()?;
@@ -315,6 +343,25 @@ impl Stream {
       Ok(data)
     }, |env, mut data| {
       data.unref(*env)?;
+      env.get_undefined()
+    })
+  }
+
+  #[napi(ts_return_type = "Promise<undefined>")]
+  pub fn write4(&mut self, env: Env, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<JsObject> {
+    let data = data.into_value()?;
+    let byte_offset = data.byte_offset;
+    let length = data.length;
+    let data = data.arraybuffer.into_value()?;
+    let data_mut = unsafe {
+      let ptr = data.as_ptr() as *mut u8;
+      std::slice::from_raw_parts(ptr, data.len())
+    };
+    let send = self.send.clone();
+    env.execute_tokio_future(async move {
+      let mut send = send.lock().await;
+      send.write_all(&data_mut[byte_offset..byte_offset+length]).await.map_err(to_err)
+    }, |env, _| {
       env.get_undefined()
     })
   }
