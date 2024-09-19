@@ -11,14 +11,14 @@ path = "rust/lib.rs"
 libp2p-identity = { version = "0.2.9", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
 libp2p-tls = "0.5.0"
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "2.12.2", default-features = false, features = ["napi4", "async"] }
-napi-derive = "2.12.2"
+napi = { version = "2.16.10", default-features = false, features = ["napi4", "async"] }
+napi-derive = "2.16.12"
 oneshot = "0.1.8"
 pin-project-lite = "0.2.14"
-quinn = "0.11.3"
+quinn = "0.11.5"
 ring = "0.17.8"
-rustls = { version = "0.23.12", features = ["ring"] }
-tokio = { version = "1.39.3", features = ["full"] }
+rustls = { version = "0.23.13", features = ["ring"] }
+tokio = { version = "1.40.0", features = ["full"] }
 
 [build-dependencies]
 napi-build = "2.0.1"
