@@ -1,5 +1,5 @@
 import { AbortError, transportSymbol } from '@libp2p/interface'
-import { marshalPrivateKey } from '@libp2p/crypto/keys'
+import { privateKeyToProtobuf } from '@libp2p/crypto/keys'
 import type { ComponentLogger, Connection, CounterGroup, DialTransportOptions, Listener, Logger, Metrics, MultiaddrFilter, PrivateKey, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
@@ -42,7 +42,7 @@ export class QuicTransport implements Transport {
   readonly dialFilter: MultiaddrFilter
 
   constructor(components: QuicComponents, options: QuicOptions) {
-    const privateKeyProto = marshalPrivateKey(components.privateKey);
+    const privateKeyProto = privateKeyToProtobuf(components.privateKey);
     const config = { ...options, privateKeyProto };
 
     this.log = components.logger.forComponent('libp2p:quic:transport')

@@ -1,4 +1,4 @@
-import { generateKeyPair, marshalPrivateKey } from '@libp2p/crypto/keys'
+import { generateKeyPair, privateKeyToProtobuf } from '@libp2p/crypto/keys'
 import { defaultOptions } from '../src/index.js'
 import * as napi from '../src/napi.js'
 
@@ -7,7 +7,7 @@ describe('Sanity', () => {
     const privateKey = await generateKeyPair('Ed25519')
     const config: napi.Config = {
       ...defaultOptions,
-      privateKeyProto: marshalPrivateKey(privateKey)
+      privateKeyProto: privateKeyToProtobuf(privateKey)
     }
     const quinnConfig = new napi.QuinnConfig(config)
 
@@ -87,8 +87,6 @@ describe('Sanity', () => {
     for (const data of dataIn) {
       dataIn.delete(data)
     }
-    // @ts-expect-error gc may be undefined
-    global.gc()
     for (const data of dataOut) {
       dataOut.delete(data)
     }
