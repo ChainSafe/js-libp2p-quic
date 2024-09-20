@@ -56,7 +56,6 @@
     "universal": "napi universal",
     "version": "napi version"
   },
-  "packageManager": "yarn@4.4.0",
   "dependencies": {
     "@libp2p/crypto": "^5.0.1",
     "@libp2p/interface": "^2.0.1",
@@ -70,5 +69,6 @@
     "@libp2p/logger": "^5.0.1",
     "@napi-rs/cli": "^2.18.4",
     "aegir": "^44.1.1"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha256.c17d3797fb9a9115bf375e31bfd30058cac6bc9c3b8807a3d8cb2094794b51ca"
 }
