@@ -98,7 +98,7 @@ export class QuicStream implements Stream {
       while (true) {
         this.log.trace('', this.id, 'reading')
         const chunk = Buffer.allocUnsafe(CHUNK_SIZE)
-        const length = await this.#stream.read(chunk)
+        const length = await this.#stream.read5(chunk)
         if (length == null) {
           this.log.trace('', this.id, 'no more data')
           break
@@ -125,7 +125,7 @@ export class QuicStream implements Stream {
       for await (const chunk of source) {
         const data = chunk instanceof Uint8ArrayList ? chunk.subarray() : chunk
         this.log.trace('', this.id, 'writing', data.length, 'bytes')
-        await this.#stream.write(data)
+        await this.#stream.write4(data)
         this.log.trace('', this.id, 'wrote', data.length, 'bytes')
       }
     } catch (e) {
