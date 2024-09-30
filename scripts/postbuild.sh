@@ -12,6 +12,6 @@ OUTPUT="src/napi.js"
 { cat scripts/JS_GEN_PREFIX; cat $OUTPUT; } > ${OUTPUT}.tmp
 mv ${OUTPUT}.tmp $OUTPUT
 
-sed -i "s/\.\/libp2p/..\/..\/libp2p/" $OUTPUT
-sed -i "s/'libp2p/'..\/..\/libp2p/" $OUTPUT
-sed -i "s/module\.exports\.\(.*\) = \(.*\)/export { \2 }/g" $OUTPUT
+sed -i '' "s/\.\/libp2p/..\/..\/libp2p/" $OUTPUT
+sed -i '' "s/'libp2p/'..\/..\/libp2p/" $OUTPUT
+sed -i '' "s/module\.exports\.\(.*\) = \(.*\)/export { \2 }/g" $OUTPUT
