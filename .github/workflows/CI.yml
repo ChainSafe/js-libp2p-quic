@@ -45,6 +45,7 @@ jobs:
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
+              rustup target add x86_64-unknown-linux-musl
               yarn build:rs --target x86_64-unknown-linux-musl
               yarn build:ts
           - host: macos-latest
@@ -54,8 +55,9 @@ jobs:
               yarn build:ts
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
+              rustup target add aarch64-unknown-linux-gnu
               yarn build:rs --target aarch64-unknown-linux-gnu
               yarn build:ts
           - host: ubuntu-latest
@@ -74,6 +76,7 @@ jobs:
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: |-
+              rustup target add aarch64-pc-windows-msvc
               yarn build:rs --target aarch64-pc-windows-msvc
               yarn build:ts
     name: stable - ${{ matrix.settings.target }} - node@20
