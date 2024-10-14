@@ -29,12 +29,10 @@ jobs:
             target: x86_64-apple-darwin
             build: |-
               yarn build:rs --target x86_64-apple-darwin
-              scripts/postbuild.sh
               yarn build:ts
           - host: windows-latest
             build: |-
               yarn build:rs --target x86_64-pc-windows-msvc
-              scripts/postbuild.sh
               yarn build:ts
             target: x86_64-pc-windows-msvc
           - host: ubuntu-latest
@@ -42,33 +40,28 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               yarn build:rs --target x86_64-unknown-linux-gnu
-              scripts/postbuild.sh
               yarn build:ts
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               yarn build:rs --target x86_64-unknown-linux-musl
-              scripts/postbuild.sh
               yarn build:ts
           - host: macos-latest
             target: aarch64-apple-darwin
             build: |-
               yarn build:rs --target aarch64-apple-darwin
-              scripts/postbuild.sh
               yarn build:ts
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               yarn build:rs --target aarch64-unknown-linux-gnu
-              scripts/postbuild.sh
               yarn build:ts
           - host: ubuntu-latest
             target: aarch64-linux-android
             build: |-
               yarn build:rs --target aarch64-linux-android
-              scripts/postbuild.sh
               yarn build:ts
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
@@ -77,13 +70,11 @@ jobs:
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
               yarn build:rs --target aarch64-unknown-linux-musl
-              scripts/postbuild.sh
               yarn build:ts
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: |-
               yarn build:rs --target aarch64-pc-windows-msvc
-              scripts/postbuild.sh
               yarn build:ts
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
@@ -392,7 +383,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-universal-apple-darwin
-          path: ${{ env.APP_NAME }}.*.node
+          path: dist/src/${{ env.APP_NAME }}.*.node
           if-no-files-found: error
   publish:
     name: Publish
