@@ -635,26 +635,6 @@
   resolved "https://registry.yarnpkg.com/@chainsafe/is-ip/-/is-ip-2.0.2.tgz#7311e7403f11d8c5cfa48111f56fcecaac37c9f6"
   integrity sha512-ndGqEMG1W5WkGagaqOZHpPU172AGdxr+LD15sv3WIUvT5oCFUrG1Y0CW/v2Egwj4JXEvSibaIIIqImsm98y1nA==
 
-"@chainsafe/napi-rs-cli@^3.0.0-alpha.63.1":
-  version "3.0.0-alpha.63.1"
-  resolved "https://registry.yarnpkg.com/@chainsafe/napi-rs-cli/-/napi-rs-cli-3.0.0-alpha.63.1.tgz#52e47ca911b3ea5205bb9a1b0409b09ae574933a"
-  integrity sha512-iqTKCMm8hvTy16AstqhHnlas2mVXOyPNwjmRYJDlcNLf9z89gWLcNFHFIes3WdImDdCpFMnJoYTRk8Du3mwPqQ==
-  dependencies:
-    "@inquirer/prompts" "^7.0.0"
-    "@napi-rs/cross-toolchain" "^0.0.16"
-    "@napi-rs/wasm-tools" "^0.0.2"
-    "@octokit/rest" "^21.0.2"
-    clipanion "^3.2.1"
-    colorette "^2.0.20"
-    debug "^4.3.7"
-    emnapi "^1.3.1"
-    js-yaml "^4.1.0"
-    lodash-es "^4.17.21"
-    semver "^7.6.3"
-    toml "^3.0.0"
-    typanion "^3.14.0"
-    wasm-sjlj "^1.0.5"
-
 "@chainsafe/netmask@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@chainsafe/netmask/-/netmask-2.0.0.tgz#0d4a75f47919f65011da4327a3845c9661f1038a"
@@ -1408,6 +1388,26 @@
     multiformats "^13.0.0"
     uint8-varint "^2.0.1"
     uint8arrays "^5.0.0"
+
+"@napi-rs/cli@^3.0.0-alpha.64":
+  version "3.0.0-alpha.64"
+  resolved "https://registry.yarnpkg.com/@napi-rs/cli/-/cli-3.0.0-alpha.64.tgz#507bf89ab547d16e78429a08fc1d256a1a4c802b"
+  integrity sha512-IYkNvh+SjFd4StEIJVsXa4paAeKakYG80GWTfX3PwpFlrX4fQZ7BkPR1IGWI17x5psz9MQvuEyicwjGWiHxI4A==
+  dependencies:
+    "@inquirer/prompts" "^7.0.0"
+    "@napi-rs/cross-toolchain" "^0.0.16"
+    "@napi-rs/wasm-tools" "^0.0.2"
+    "@octokit/rest" "^21.0.2"
+    clipanion "^3.2.1"
+    colorette "^2.0.20"
+    debug "^4.3.7"
+    emnapi "^1.3.1"
+    js-yaml "^4.1.0"
+    lodash-es "^4.17.21"
+    semver "^7.6.3"
+    toml "^3.0.0"
+    typanion "^3.14.0"
+    wasm-sjlj "^1.0.5"
 
 "@napi-rs/cross-toolchain@^0.0.16":
   version "0.0.16"
