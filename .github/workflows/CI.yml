@@ -203,7 +203,7 @@ jobs:
           name: bindings-aarch64-apple-darwin
           path: artifacts
       - name: Combine binaries
-        run: yarn universal
+        run: yarn universalize
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
