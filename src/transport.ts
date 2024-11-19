@@ -97,6 +97,7 @@ export class QuicTransport implements Transport {
         connection,
         logger: this.components.logger,
       }),
+      signal: options.signal
     })
   }
 

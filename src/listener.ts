@@ -26,7 +26,7 @@ type QuicListenerState = {
   listener: napi.Server
   listenAddr: Multiaddr
   controller: AbortController
-  connections: Set<Connection>
+  connections: Set<QuicConnection>
 } | {
   status: 'closed'
 }
@@ -143,7 +143,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     })
 
     try {
-      const conn = await this.options.upgrader.upgradeInbound(maConn, {
+      await this.options.upgrader.upgradeInbound(maConn, {
         skipEncryption: true,
         skipProtection: true,
         muxerFactory: new QuicStreamMuxerFactory({
@@ -152,15 +152,12 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
         }),
       })
 
-      this.state.connections.add(conn)
+      this.state.connections.add(maConn)
       maConn.addEventListener('close', () => {
         if (this.state.status === 'listening') {
-          this.state.connections.delete(conn)
+          this.state.connections.delete(maConn)
         }
       }, { once: true })
-
-      this.safeDispatchEvent('connection', { detail: conn })
-      this.options.handler?.(conn)
     } catch (err) {
       this.log.error('%s error handling inbound connection', this.state.listenAddr.toString(), err)
       maConn.abort(err as Error)
