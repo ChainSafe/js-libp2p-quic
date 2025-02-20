@@ -55,15 +55,15 @@
   "dependencies": {
     "@libp2p/crypto": "^5.0.1",
     "@libp2p/interface": "^2.0.1",
-    "@multiformats/mafmt": "^12.1.6",
     "@multiformats/multiaddr": "^12.3.1",
+    "@multiformats/multiaddr-matcher": "^1.6.0",
     "it-stream-types": "^2.0.2",
     "uint8arraylist": "^2.4.8"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.0.0-alpha.64",
     "@libp2p/interface-compliance-tests": "^6.0.1",
     "@libp2p/logger": "^5.0.1",
+    "@napi-rs/cli": "^3.0.0-alpha.64",
     "aegir": "^44.1.1"
   },
   "packageManager": "yarn@1.22.22+sha256.c17d3797fb9a9115bf375e31bfd30058cac6bc9c3b8807a3d8cb2094794b51ca"
