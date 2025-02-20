@@ -900,8 +900,8 @@ __metadata:
     "@libp2p/interface": "npm:^2.0.1"
     "@libp2p/interface-compliance-tests": "npm:^6.0.1"
     "@libp2p/logger": "npm:^5.0.1"
-    "@multiformats/mafmt": "npm:^12.1.6"
     "@multiformats/multiaddr": "npm:^12.3.1"
+    "@multiformats/multiaddr-matcher": "npm:^1.6.0"
     "@napi-rs/cli": "npm:^3.0.0-alpha.70"
     aegir: "npm:^44.1.1"
     it-stream-types: "npm:^2.0.2"
@@ -1844,15 +1844,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@multiformats/mafmt@npm:^12.1.6":
-  version: 12.1.6
-  resolution: "@multiformats/mafmt@npm:12.1.6"
-  dependencies:
-    "@multiformats/multiaddr": "npm:^12.0.0"
-  checksum: 10c0/aedae1275263b7350afdd8581b337c803420aee116fdd537f1ec0160b8333d58b51c19c45dcdf9a82c0188064c8aa0ce8f1a16bb7130a17f3b5b4d53177fe6da
-  languageName: node
-  linkType: hard
-
 "@multiformats/multiaddr-matcher@npm:^1.2.1":
   version: 1.2.4
   resolution: "@multiformats/multiaddr-matcher@npm:1.2.4"
@@ -1861,6 +1852,17 @@ __metadata:
     "@multiformats/multiaddr": "npm:^12.0.0"
     multiformats: "npm:^13.0.0"
   checksum: 10c0/e4e8547873f25b0693772eb0bd2e8bf1346825a3b8b7d14cb8db5f6869ae5359e72b146a31c65908d8f6b68330cec7fe2cbe89ed1da052faf1cd165840bc2130
+  languageName: node
+  linkType: hard
+
+"@multiformats/multiaddr-matcher@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "@multiformats/multiaddr-matcher@npm:1.6.0"
+  dependencies:
+    "@chainsafe/is-ip": "npm:^2.0.1"
+    "@multiformats/multiaddr": "npm:^12.0.0"
+    multiformats: "npm:^13.0.0"
+  checksum: 10c0/32d5f3264816452a71825848f74ebd67b8baef5bdf2337fb3caa1a280e572a60cadcf6d7d2f7031194bd126668fee5d00bed24fbc0ca77894eb5bdfeadc118b7
   languageName: node
   linkType: hard
 
