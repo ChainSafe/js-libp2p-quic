@@ -15,18 +15,20 @@
     }
   },
   "napi": {
-    "name": "libp2p-quic",
-    "triples": {
-      "additional": [
-        "aarch64-apple-darwin",
-        "aarch64-linux-android",
-        "aarch64-unknown-linux-gnu",
-        "universal-apple-darwin"
-      ]
-    }
+    "binaryName": "libp2p-quic",
+    "targets": [
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "aarch64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl"
+    ]
   },
   "engines": {
-    "node": ">= 10"
+    "node": ">= 20"
   },
   "keywords": [
     "napi",
@@ -42,8 +44,8 @@
     "artifacts": "napi artifacts",
     "build": "yarn build:rs:debug && yarn build:ts",
     "build:ts": "aegir build && cp src/*.node dist/src",
-    "build:rs": "napi build --platform --release -o src --esm --dts napi.d.ts --js napi.js",
-    "build:rs:debug": "napi build --platform -o src --esm --dts napi.d.ts --js napi.js",
+    "build:rs": "napi build --platform --release --strip --esm -o src --dts napi.d.ts --js napi.js",
+    "build:rs:debug": "napi build --platform --esm -o src --dts napi.d.ts --js napi.js",
     "dep-check": "aegir dep-check -P test -P src/napi.js",
     "docs": "aegir docs",
     "lint": "aegir lint",
@@ -61,10 +63,10 @@
     "uint8arraylist": "^2.4.8"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.0.0-alpha.64",
     "@libp2p/interface-compliance-tests": "^6.0.1",
     "@libp2p/logger": "^5.0.1",
+    "@napi-rs/cli": "^3.0.0-alpha.70",
     "aegir": "^44.1.1"
   },
-  "packageManager": "yarn@1.22.22+sha256.c17d3797fb9a9115bf375e31bfd30058cac6bc9c3b8807a3d8cb2094794b51ca"
+  "packageManager": "yarn@4.6.0"
 }
