@@ -58,6 +58,11 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
 
     this.log('new')
   }
+
+  updateAnnounceAddrs(addrs: Multiaddr[]): void {
+    throw new Error('Method not implemented.')
+  }
+
   getAddrs(): Multiaddr[] {
     if (this.state.status === 'listening') {
       return [this.state.listenAddr]

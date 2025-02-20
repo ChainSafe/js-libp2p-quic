@@ -21,28 +21,28 @@ jobs:
         settings:
           - host: macos-latest
             target: x86_64-apple-darwin
-            build: yarn build --platform --target x86_64-apple-darwin
+            build: yarn build:rs --platform --target x86_64-apple-darwin
           - host: windows-latest
-            build: yarn build --platform
+            build: yarn build:rs --platform
             target: x86_64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            build: yarn build --platform --target x86_64-unknown-linux-gnu --use-napi-cross
+            build: yarn build:rs --platform --target x86_64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            build: yarn build --platform --target x86_64-unknown-linux-musl -x
+            build: yarn build:rs --platform --target x86_64-unknown-linux-musl -x
           - host: macos-latest
             target: aarch64-apple-darwin
-            build: yarn build --platform --target aarch64-apple-darwin
+            build: yarn build:rs --platform --target aarch64-apple-darwin
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            build: yarn build --platform --target aarch64-unknown-linux-gnu -x
+            build: yarn build:rs --platform --target aarch64-unknown-linux-gnu -x
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
-            build: yarn build --platform --target aarch64-unknown-linux-musl -x
+            build: yarn build:rs --platform --target aarch64-unknown-linux-musl -x
           - host: windows-latest
             target: aarch64-pc-windows-msvc
-            build: yarn build --platform --target aarch64-pc-windows-msvc
+            build: yarn build:rs --platform --target aarch64-pc-windows-msvc
     name: Build bindings for ${{ matrix.settings.target }} - node@22
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -88,15 +88,18 @@ jobs:
           corepack enable
           yarn set version 4.6.0
           yarn install
-      - name: Build
+      - name: Build rs
         run: ${{ matrix.settings.build }}
+        shell: bash
+      - name: Build ts
+        run: yarn build:ts
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: matrix.settings.target != 'wasm32-wasi-preview1-threads'
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: '*.node'
+          path: 'src/*.node'
           if-no-files-found: error
       - name: Upload artifact
         uses: actions/upload-artifact@v4
