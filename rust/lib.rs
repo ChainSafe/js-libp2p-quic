@@ -1,27 +1,16 @@
 #![deny(clippy::all)]
 
 use std::{
-  cell::UnsafeCell, net::{IpAddr, SocketAddr}, sync::Arc, vec
+  net::{IpAddr, SocketAddr}, sync::Arc, vec
 };
 
-use napi::{bindgen_prelude::*, JsArrayBufferValue, JsBuffer, JsBufferValue, JsNumber, JsObject, JsTypedArray, JsUndefined, Ref};
+use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use quinn::{RecvStream, SendStream};
 use tokio::sync::Mutex;
 
 mod config;
 mod socket;
 mod stats;
-
-#[napi::module_init]
-fn init() {
-  napi::bindgen_prelude::create_custom_tokio_runtime(
-tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .expect("Create tokio runtime failed"),
-  );
-}
 
 #[napi]
 pub enum SocketFamily {
