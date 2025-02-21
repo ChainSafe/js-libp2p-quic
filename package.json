@@ -42,7 +42,7 @@
   "homepage": "https://github.com/ChainSafe/js-libp2p-quic",
   "scripts": {
     "artifacts": "napi artifacts",
-    "build": "yarn build:rs:debug && yarn build:ts",
+    "build": "yarn build:ts",
     "build:ts": "aegir build && cp src/*.node dist/src",
     "build:rs": "napi build --platform --release --strip --esm -o src --dts napi.d.ts --js napi.js",
     "build:rs:debug": "napi build --platform --esm -o src --dts napi.d.ts --js napi.js",
