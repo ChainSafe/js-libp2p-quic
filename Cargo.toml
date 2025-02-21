@@ -8,20 +8,22 @@ crate-type = ["cdylib"]
 path = "rust/lib.rs"
 
 [dependencies]
-libp2p-identity = { version = "0.2.9", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
-libp2p-tls = "0.5.0"
+libp2p-identity = { version = "0.2.10", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
+libp2p-tls = "0.6.0"
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "2.16.10", default-features = false, features = ["napi4", "async"] }
-napi-derive = "2.16.12"
-oneshot = "0.1.8"
-pin-project-lite = "0.2.14"
-quinn = "0.11.5"
-ring = "0.17.8"
-rustls = { version = "0.23.13", features = ["ring"] }
-tokio = { version = "1.40.0", features = ["full"] }
+napi = { version = "3.0.0-alpha.28", default-features = false, features = ["napi4", "async", "tokio_rt"] }
+napi-derive = "3.0.0-alpha.26"
+oneshot = "0.1.10"
+pin-project-lite = "0.2.16"
+quinn = "0.11.6"
+ring = "0.17.9"
+rustls = { version = "0.23.23", features = ["ring"] }
+tokio = { version = "1.43.0", features = ["full"] }
+# included to satisfy napi dependencies
+ctor = "0.3.6"
 
 [build-dependencies]
-napi-build = "2.0.1"
+napi-build = "2.1.4"
 
 [profile.release]
 lto = true
