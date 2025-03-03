@@ -27,7 +27,7 @@ jobs:
             target: x86_64-pc-windows-msvc
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            build: yarn build:rs --platform --target x86_64-unknown-linux-gnu --use-napi-cross
+            build: yarn build:rs:debug --platform --target x86_64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
             build: yarn build:rs --platform --target x86_64-unknown-linux-musl -x
