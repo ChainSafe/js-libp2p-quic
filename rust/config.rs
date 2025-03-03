@@ -55,7 +55,6 @@ impl From<ConfigError> for napi::Error<ConfigErrorCode> {
 // All errors returned from this module will be of type `napi::Error<ConfigErrorCode>`
 type Result<T> = std::result::Result<T, napi::Error<ConfigErrorCode>>;
 
-#[derive(Clone)]
 #[napi(object)]
 /// User-level configuration
 pub struct Config {
