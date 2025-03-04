@@ -2,7 +2,7 @@ import transportCompliance from '@libp2p/interface-compliance-tests/transport'
 import { QUICV1 } from '@multiformats/multiaddr-matcher'
 import { quic } from '../src/index.js'
 
-describe.only('Interface compliance tests (IPv4)', () => {
+describe('Interface compliance tests (IPv4)', () => {
   // Fails these listener tests:
   // - close listener with connections, through timeout
   // - should not handle connection if upgradeInbound throws
