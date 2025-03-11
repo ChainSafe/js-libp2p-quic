@@ -137,4 +137,3 @@ export class QuicStream implements Stream {
 }
 
 export const CHUNK_SIZE = 4096
-
