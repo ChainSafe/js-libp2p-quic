@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.0...v1.0.1) (2025-03-11)
+
+
+### Bug Fixes
+
+* remove whitespace ([ad7435a](https://github.com/ChainSafe/js-libp2p-quic/commit/ad7435aa65f3abd4a574dce5ce568726e7fef545))
+
 ## 1.0.0 (2025-03-04)
 
 
