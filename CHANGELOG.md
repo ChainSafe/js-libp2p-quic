@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.2...v1.0.3) (2025-03-12)
+
+
+### Bug Fixes
+
+* publish with provenance bug ([#13](https://github.com/ChainSafe/js-libp2p-quic/issues/13)) ([7bcd76b](https://github.com/ChainSafe/js-libp2p-quic/commit/7bcd76bb947c78b030955e39f03c99989ff18b43))
+
 ## [1.0.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.1...v1.0.2) (2025-03-12)
 
 
