@@ -1,6 +1,10 @@
 {
   "name": "@chainsafe/libp2p-quic-darwin-arm64",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChainSafe/js-libp2p-quic"
+  },
   "os": [
     "darwin"
   ],
