@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.1...v1.0.2) (2025-03-12)
+
+
+### Bug Fixes
+
+* ci publish step depends on build ([5730e51](https://github.com/ChainSafe/js-libp2p-quic/commit/5730e516e7b88579b7f04a4486090cd41172b612))
+* pass signal to inbound upgrade ([#12](https://github.com/ChainSafe/js-libp2p-quic/issues/12)) ([9580c45](https://github.com/ChainSafe/js-libp2p-quic/commit/9580c45c9c056793abe1c0f415e9dbad32e9a7ed))
+
 ## [1.0.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.0...v1.0.1) (2025-03-11)
 
 
