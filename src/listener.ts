@@ -1,4 +1,4 @@
-import { TypedEventEmitter } from '@libp2p/interface'
+import { setMaxListeners, TypedEventEmitter } from '@libp2p/interface'
 import type { ComponentLogger, Connection, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
@@ -37,6 +37,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   readonly options: QuicCreateListenerOptions
   readonly log: Logger
   readonly metrics?: QuicListenerMetrics
+  private readonly shutdownController: AbortController
 
   state: QuicListenerState = { status: 'ready' }
 
@@ -46,6 +47,9 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     this.init = init
     this.options = init.options
     this.log = init.logger.forComponent('libp2p:quic:listener')
+
+    this.shutdownController = new AbortController()
+    setMaxListeners(Infinity, this.shutdownController.signal)
 
     if (init.metrics != null) {
       this.metrics = {
@@ -96,6 +100,8 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       await this.state.listener.abort()
       const listenAddr = this.state.listenAddr
       this.state = { status: 'closed' }
+      // stop any in-progress connection upgrades
+      this.shutdownController.abort()
       this.safeDispatchEvent('close')
       this.log('closed', listenAddr.toString())
     }
@@ -155,6 +161,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
           connection,
           logger: this.init.logger,
         }),
+        signal: this.shutdownController.signal
       })
 
       this.state.connections.add(maConn)
