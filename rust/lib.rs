@@ -46,6 +46,11 @@ impl Server {
   }
 
   #[napi]
+  pub fn port(&self) -> u16 {
+    return self.endpoint.local_addr().unwrap().port();
+  }
+
+  #[napi]
   pub async fn inbound_connection(&self) -> Result<Connection> {
     let incoming = match self.endpoint.accept().await {
       Some(incoming) => Ok(incoming),

@@ -123,8 +123,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             architecture: x64
         node:
-          - '18'
-          - '22'
+          - 22
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
@@ -157,8 +156,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - '18'
-          - '22'
+          - 22
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -173,12 +171,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-unknown-linux-gnu
-          path: src 
+          path: src
       - name: List packages
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim corepack enable && yarn run test
+        run: docker run --rm -v "$(pwd):/build" -w /build node:${{ matrix.node }}-slim corepack enable && yarn run test
   test-linux-x64-musl-binding:
     name: Test bindings on x86_64-unknown-linux-musl - node@${{ matrix.node }}
     needs:
@@ -187,8 +185,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - '18'
-          - '22'
+          - 22
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -223,7 +220,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - '22'
+          - 22
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -260,8 +257,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - '18'
-          - '22'
+          - 22
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

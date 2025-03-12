@@ -27,11 +27,11 @@
  * ```
  */
 
-import type { Transport } from '@libp2p/interface'
 import { QuicTransport, type QuicComponents, type QuicOptions } from './transport.js'
+import type { Transport } from '@libp2p/interface'
 
-export function quic(options?: Partial<QuicOptions>): (components: QuicComponents) => Transport {
-  return (components) => new QuicTransport(components, {...defaultOptions, ...options})
+export function quic (options?: Partial<QuicOptions>): (components: QuicComponents) => Transport {
+  return (components) => new QuicTransport(components, { ...defaultOptions, ...options })
 }
 
 export const defaultOptions: QuicOptions = {
@@ -40,5 +40,5 @@ export const defaultOptions: QuicOptions = {
   keepAliveInterval: 5_000,
   maxConcurrentStreamLimit: 256,
   maxStreamData: 10_000_000,
-  maxConnectionData: 15_000_000, 
+  maxConnectionData: 15_000_000
 }
