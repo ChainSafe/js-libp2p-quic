@@ -326,6 +326,7 @@ jobs:
         run: ls -R ./npm
         shell: bash
       - name: Build ts
+        if: ${{ steps.release.outputs.release_created }}
         run: yarn build:ts
         shell: bash
       - name: Publish
