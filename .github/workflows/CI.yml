@@ -294,6 +294,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn set version 4.6.0
+          yarn install
+          yarn run build:ts
       - run: yarn run test:chrome
   test-chrome-webworker:
     needs: build
@@ -303,6 +309,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn set version 4.6.0
+          yarn install
+          yarn run build:ts
       - run: yarn run test:chrome-webworker
   test-firefox:
     needs: build
@@ -312,6 +324,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn set version 4.6.0
+          yarn install
+          yarn run build:ts
       - run: npm run --if-present test:firefox
   test-firefox-webworker:
     needs: build
@@ -321,6 +339,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn set version 4.6.0
+          yarn install
+          yarn run build:ts
       - run: yarn run test:firefox-webworker
   test-webkit:
     needs: build
@@ -330,6 +354,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn set version 4.6.0
+          yarn install
+          yarn run build:ts
       - run: yarn run test:webkit
   test-electron-main:
     needs: build
@@ -339,6 +369,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn set version 4.6.0
+          yarn install
+          yarn run build:ts
       - run: npx xvfb-maybe yarn run test:electron-main
   publish:
     name: Publish
