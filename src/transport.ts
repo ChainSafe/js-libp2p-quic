@@ -1,30 +1,24 @@
 import { privateKeyToProtobuf } from '@libp2p/crypto/keys'
-import { AbortError, transportSymbol } from '@libp2p/interface'
+import { AbortError, serviceCapabilities, transportSymbol } from '@libp2p/interface'
 import { QuicConnection } from './connection.js'
 import { dialFilter, listenFilter } from './filter.js'
 import { QuicListener, type QuicCreateListenerOptions } from './listener.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
-import type { ComponentLogger, Connection, CounterGroup, DialTransportOptions, Listener, Logger, Metrics, MultiaddrFilter, PrivateKey, Transport } from '@libp2p/interface'
+import type { Connection, CounterGroup, Listener, Logger, MultiaddrFilter, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
+import type { QuicComponents, QuicDialOptions, QuicOptions } from './index.js'
 
-export type QuicOptions = Omit<napi.Config, 'privateKeyProto'>
-
-export interface QuicComponents {
-  metrics?: Metrics
-  logger: ComponentLogger
-  privateKey: PrivateKey
-}
-
-export type QuicDialOptions = DialTransportOptions
-
-export interface QuicTransportMetrics {
+interface QuicTransportMetrics {
   events: CounterGroup
 }
 
 export class QuicTransport implements Transport {
   readonly [Symbol.toStringTag]: string = 'quic'
   readonly [transportSymbol] = true
+  readonly [serviceCapabilities]: string[] = [
+    '@libp2p/transport'
+  ]
 
   readonly log: Logger
   readonly components: QuicComponents

@@ -9,7 +9,7 @@ import { pEvent } from 'p-event'
 import { stubInterface } from 'sinon-ts'
 import { quic } from '../src/index.js'
 import { createComponents } from './util.js'
-import type { QuicComponents } from '../src/transport.js'
+import type { QuicComponents } from '../src/index.js'
 import type { Listener, Upgrader } from '@libp2p/interface'
 
 describe('Quic Transport', () => {
