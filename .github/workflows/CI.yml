@@ -313,9 +313,6 @@ jobs:
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
         run: yarn install
-      - name: Build ts
-        run: yarn build:ts
-        shell: bash
       - name: Download all artifacts
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/download-artifact@v4
@@ -327,6 +324,9 @@ jobs:
       - name: List packages
         if: ${{ steps.release.outputs.release_created }}
         run: ls -R ./npm
+        shell: bash
+      - name: Build ts
+        run: yarn build:ts
         shell: bash
       - name: Publish
         if: ${{ steps.release.outputs.release_created }}
