@@ -27,8 +27,19 @@
  * ```
  */
 
-import { QuicTransport, type QuicComponents, type QuicOptions } from './transport.js'
-import type { Transport } from '@libp2p/interface'
+import { QuicTransport } from './transport.js'
+import type { ComponentLogger, DialTransportOptions, Metrics, PrivateKey, Transport } from '@libp2p/interface'
+import type * as napi from './napi.js'
+
+export type QuicOptions = Omit<napi.Config, 'privateKeyProto'>
+
+export interface QuicComponents {
+  metrics?: Metrics
+  logger: ComponentLogger
+  privateKey: PrivateKey
+}
+
+export type QuicDialOptions = DialTransportOptions
 
 export function quic (options?: Partial<QuicOptions>): (components: QuicComponents) => Transport {
   return (components) => new QuicTransport(components, { ...defaultOptions, ...options })

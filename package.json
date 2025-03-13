@@ -58,6 +58,12 @@
     "lint": "aegir lint",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "aegir test -t node",
+    "test:chrome": "aegir test -t browser -f ./dist/test/browser.js --cov",
+    "test:chrome-webworker": "aegir test -t webworker -f ./dist/test/browser.js",
+    "test:firefox": "aegir test -t browser -f ./dist/test/browser.js -- --browser firefox",
+    "test:firefox-webworker": "aegir test -t webworker -f ./dist/test/browser.js -- --browser firefox",
+    "test:node": "aegir test -t node --cov",
+    "test:electron-main": "aegir test -t electron-main",
     "universal": "napi universal",
     "version": "napi version"
   },
@@ -76,5 +82,12 @@
     "aegir": "^45.1.3",
     "sinon-ts": "^2.0.0"
   },
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.6.0",
+  "browser": {
+    "./dist/src/transport.js": "./dist/src/transport.browser.js"
+  },
+  "react-native": {
+    "./dist/src/transport.js": "./dist/src/transport.js"
+  },
+  "sideEffects": false
 }
