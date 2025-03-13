@@ -341,6 +341,7 @@ export declare class QuinnConfig {
 
 export declare class Server {
   constructor(config: QuinnConfig, ip: string, port: number)
+  port(): number
   inboundConnection(): Promise<Connection>
   abort(): Promise<void>
   stats(): EndpointStats

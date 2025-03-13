@@ -1,18 +1,20 @@
 import { setMaxListeners, TypedEventEmitter } from '@libp2p/interface'
-import type { ComponentLogger, Connection, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
-import type { Multiaddr } from '@multiformats/multiaddr'
-
-import * as napi from './napi.js'
+import { fromStringTuples, type Multiaddr } from '@multiformats/multiaddr'
 import { QuicConnection } from './connection.js'
+import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
+import { getMultiaddrs } from './utils.js'
+import type { ComponentLogger, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
 
-export type QuicCreateListenerOptions = CreateListenerOptions & {}
+export interface QuicCreateListenerOptions extends CreateListenerOptions {
 
-export type QuicListenerMetrics = {
+}
+
+export interface QuicListenerMetrics {
   events: CounterGroup
 }
 
-type QuicListenerInit = {
+interface QuicListenerInit {
   options: QuicCreateListenerOptions
   config: napi.QuinnConfig
   logger: ComponentLogger
@@ -41,7 +43,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
 
   state: QuicListenerState = { status: 'ready' }
 
-  constructor(init: QuicListenerInit) {
+  constructor (init: QuicListenerInit) {
     super()
     this.#config = init.config
     this.init = init
@@ -63,38 +65,61 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     this.log('new')
   }
 
-  updateAnnounceAddrs(addrs: Multiaddr[]): void {
+  updateAnnounceAddrs (addrs: Multiaddr[]): void {
     throw new Error('Method not implemented.')
   }
 
-  getAddrs(): Multiaddr[] {
+  getAddrs (): Multiaddr[] {
     if (this.state.status === 'listening') {
+      const ma = this.state.listenAddr
+      const addr = ma.nodeAddress()
+
+      if (addr.address === '0.0.0.0') {
+        return getMultiaddrs('ip4', addr.address, addr.port)
+      } else if (addr.address === '::') {
+        return getMultiaddrs('ip6', addr.address, addr.port)
+      }
+
       return [this.state.listenAddr]
     }
     return []
   }
 
-  async listen(multiaddr: Multiaddr): Promise<void> {
+  async listen (multiaddr: Multiaddr): Promise<void> {
     const addr = multiaddr.nodeAddress()
     const controller = new AbortController()
     const listener = new napi.Server(this.#config, addr.address, addr.port)
+
+    // replace wildcard port with actual listening port
+    if (addr.port === 0) {
+      const stringTuples = multiaddr.stringTuples()
+
+      for (const stringTuple of stringTuples) {
+        if (stringTuple[0] === 0x0111) {
+          stringTuple[1] = `${listener.port()}`
+        }
+      }
+
+      multiaddr = fromStringTuples(stringTuples)
+    }
+
     this.state = {
       status: 'listening',
       listener,
       listenAddr: multiaddr,
       controller,
-      connections: new Set(),
+      connections: new Set()
     }
     void this.awaitInboundConnections()
     this.safeDispatchEvent('listening')
     this.log('listening', multiaddr.toString())
   }
 
-  async close(): Promise<void> {
+  async close (): Promise<void> {
     if (this.state.status === 'listening') {
       this.state.controller.abort()
       for (const conn of this.state.connections) {
-        conn.abort(new Error('listener closed'));
+        conn.abort(new Error('listener closed'))
       }
       this.state.connections.clear()
       await this.state.listener.abort()
@@ -107,12 +132,12 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
   }
 
-  async awaitInboundConnections(): Promise<void> {
+  async awaitInboundConnections (): Promise<void> {
     if (this.state.status === 'listening') {
       const signal = this.state.controller.signal
       const listenAddr = this.state.listenAddr
       const aborted = new Promise((resolve) => {
-        signal.addEventListener('abort', () => resolve(undefined), { once: true })
+        signal.addEventListener('abort', () => { resolve(undefined) }, { once: true })
       })
       while (true) {
         try {
@@ -122,7 +147,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
             .catch(() => this.metrics?.events.increment({ error: true }))
           const connection = await Promise.race([
             aborted,
-            listenerPromise,
+            listenerPromise
           ]) as napi.Connection | undefined
           if (connection == null) {
             break
@@ -139,7 +164,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
   }
 
-  async onInboundConnection(connection: napi.Connection): Promise<void> {
+  async onInboundConnection (connection: napi.Connection): Promise<void> {
     if (this.state.status !== 'listening') {
       this.log.error('ignoring inbound connection after listener closed')
       connection.abort()
@@ -150,7 +175,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       connection,
       logger: this.init.logger,
       direction: 'inbound',
-      metrics: this.metrics?.events,
+      metrics: this.metrics?.events
     })
 
     try {
@@ -159,7 +184,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
         skipProtection: true,
         muxerFactory: new QuicStreamMuxerFactory({
           connection,
-          logger: this.init.logger,
+          logger: this.init.logger
         }),
         signal: this.shutdownController.signal
       })

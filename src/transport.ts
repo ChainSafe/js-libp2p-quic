@@ -1,30 +1,29 @@
-import { AbortError, transportSymbol } from '@libp2p/interface'
 import { privateKeyToProtobuf } from '@libp2p/crypto/keys'
+import { AbortError, transportSymbol } from '@libp2p/interface'
+import { QuicConnection } from './connection.js'
+import { dialFilter, listenFilter } from './filter.js'
+import { QuicListener, type QuicCreateListenerOptions } from './listener.js'
+import * as napi from './napi.js'
+import { QuicStreamMuxerFactory } from './stream-muxer.js'
 import type { ComponentLogger, Connection, CounterGroup, DialTransportOptions, Listener, Logger, Metrics, MultiaddrFilter, PrivateKey, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
-import * as napi from './napi.js'
-import { dialFilter, listenFilter } from './filter.js'
-import { QuicListener, type QuicCreateListenerOptions } from './listener.js'
-import { QuicConnection } from './connection.js'
-import { QuicStreamMuxerFactory } from './stream-muxer.js'
+export type QuicOptions = Omit<napi.Config, 'privateKeyProto'>
 
-export type QuicOptions = Omit<napi.Config, "privateKeyProto"> & {}
-
-export type QuicComponents = {
+export interface QuicComponents {
   metrics?: Metrics
   logger: ComponentLogger
   privateKey: PrivateKey
 }
 
-export type QuicDialOptions = DialTransportOptions & {}
+export type QuicDialOptions = DialTransportOptions
 
-export type QuicTransportMetrics = {
+export interface QuicTransportMetrics {
   events: CounterGroup
 }
 
 export class QuicTransport implements Transport {
-  readonly [Symbol.toStringTag]: string = "quic"
+  readonly [Symbol.toStringTag]: string = 'quic'
   readonly [transportSymbol] = true
 
   readonly log: Logger
@@ -41,25 +40,25 @@ export class QuicTransport implements Transport {
   readonly listenFilter: MultiaddrFilter
   readonly dialFilter: MultiaddrFilter
 
-  constructor(components: QuicComponents, options: QuicOptions) {
-    const privateKeyProto = privateKeyToProtobuf(components.privateKey);
-    const config = { ...options, privateKeyProto };
+  constructor (components: QuicComponents, options: QuicOptions) {
+    const privateKeyProto = privateKeyToProtobuf(components.privateKey)
+    const config = { ...options, privateKeyProto }
 
     this.log = components.logger.forComponent('libp2p:quic:transport')
     this.components = components
 
-    this.#config = new napi.QuinnConfig(config);
+    this.#config = new napi.QuinnConfig(config)
     this.#clients = {
       ip4: new napi.Client(this.#config, 0),
-      ip6: new napi.Client(this.#config, 1),
+      ip6: new napi.Client(this.#config, 1)
     }
 
     if (this.components.metrics != null) {
       this.metrics = {
         events: this.components.metrics?.registerCounterGroup('libp2p_quic_dialer_events_total', {
           label: 'event',
-          help: 'Total count of QUIC dialer events by type',
-        }),
+          help: 'Total count of QUIC dialer events by type'
+        })
       }
     }
 
@@ -69,7 +68,7 @@ export class QuicTransport implements Transport {
     this.log('new')
   }
 
-  async dial(ma: Multiaddr, options: QuicDialOptions): Promise<Connection> {
+  async dial (ma: Multiaddr, options: QuicDialOptions): Promise<Connection> {
     if (options.signal?.aborted) {
       throw new AbortError()
     }
@@ -88,25 +87,25 @@ export class QuicTransport implements Transport {
       connection,
       logger: this.components.logger,
       direction: 'outbound',
-      metrics: this.metrics?.events,
+      metrics: this.metrics?.events
     })
     return options.upgrader.upgradeOutbound(maConn, {
       skipEncryption: true,
       skipProtection: true,
       muxerFactory: new QuicStreamMuxerFactory({
         connection,
-        logger: this.components.logger,
+        logger: this.components.logger
       }),
       signal: options.signal
     })
   }
 
-  createListener(options: QuicCreateListenerOptions): Listener {
+  createListener (options: QuicCreateListenerOptions): Listener {
     return new QuicListener({
       options,
       config: this.#config,
       logger: this.components.logger,
-      metrics: this.components.metrics,
+      metrics: this.components.metrics
     })
   }
 }

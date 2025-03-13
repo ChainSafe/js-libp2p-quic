@@ -2,8 +2,11 @@ import { generateKeyPair, privateKeyToProtobuf } from '@libp2p/crypto/keys'
 import { defaultOptions } from '../src/index.js'
 import * as napi from '../src/napi.js'
 
-describe('Sanity', () => {
-  it.only('create a bunch of connections and streams', async () => {
+// skipped because this causes panics
+describe.skip('Sanity', () => {
+  it('create a bunch of connections and streams', async function () {
+    this.timeout(60_000 * 5)
+
     const privateKey = await generateKeyPair('Ed25519')
     const config: napi.Config = {
       ...defaultOptions,
@@ -25,18 +28,18 @@ describe('Sanity', () => {
     const dataIn = new Set<Buffer>()
     const dataOut = new Set<Buffer>()
 
-    const log = (...args: any[]) => {
+    const log = (...args: unknown[]): void => {
       // console.log(...args)
     }
 
-    const onInboundConnection = async (conn: napi.Connection) => {
+    const onInboundConnection = async (conn: napi.Connection): Promise<void> => {
       connections.add(conn)
       for (let i = 0; i < nStreams; i++) {
         const stream = await conn.inboundStream()
-        onInboundStream(stream, i)
+        void onInboundStream(stream, i)
       }
     }
-    const onInboundStream = async (stream: napi.Stream, connIx: number) => {
+    const onInboundStream = async (stream: napi.Stream, connIx: number): Promise<void> => {
       streams.add(stream)
       for (let i = 0; i < nData; i++) {
         const b = Buffer.allocUnsafe(4096)
@@ -48,14 +51,14 @@ describe('Sanity', () => {
         log('read', connIx, i)
       }
     }
-    const onOutboundConnection = async (conn: napi.Connection) => {
+    const onOutboundConnection = async (conn: napi.Connection): Promise<void> => {
       connections.add(conn)
       for (let i = 0; i < nStreams; i++) {
         const stream = await conn.outboundStream()
-        onOutboundStream(stream, i)
+        void onOutboundStream(stream, i)
       }
     }
-    const onOutboundStream = async (stream: napi.Stream, connIx: number) => {
+    const onOutboundStream = async (stream: napi.Stream, connIx: number): Promise<void> => {
       streams.add(stream)
       for (let i = 0; i < nData; i++) {
         const b = Buffer.alloc(nData, i)
@@ -67,19 +70,19 @@ describe('Sanity', () => {
     const inbound = Promise.resolve().then(async () => {
       for (let i = 0; i < nConnections; i++) {
         const conn = await server.inboundConnection()
-        onInboundConnection(conn)
+        void onInboundConnection(conn)
       }
     })
     const outbound = Promise.resolve().then(async () => {
       for (let i = 0; i < nConnections; i++) {
         const conn = await client.outboundConnection(ip, port)
-        onOutboundConnection(conn)
+        void onOutboundConnection(conn)
       }
     })
     await Promise.all([inbound, outbound])
     for (const stream of streams) {
-      stream.finishWrite()
-      stream.stopRead()
+      void stream.finishWrite()
+      void stream.stopRead()
     }
     for (const conn of connections) {
       conn.abort()

@@ -1,12 +1,10 @@
-import { Uint8ArrayList } from 'uint8arraylist'
-
+import { type Uint8ArrayList } from 'uint8arraylist'
+import { QuicStream } from './stream.js'
+import type * as napi from './napi.js'
 import type { AbortOptions, ComponentLogger, Logger, Stream, StreamMuxer, StreamMuxerFactory, StreamMuxerInit } from '@libp2p/interface'
 import type { Sink } from 'it-stream-types'
 
-import * as napi from './napi.js'
-import { QuicStream } from './stream.js'
-
-type QuicStreamMuxerFactoryInit = {
+interface QuicStreamMuxerFactoryInit {
   connection: napi.Connection
   logger: ComponentLogger
 }
@@ -15,20 +13,20 @@ type QuicStreamMuxerFactoryInit = {
  * Each stream muxer factory is only configured for a single connection
  */
 export class QuicStreamMuxerFactory implements StreamMuxerFactory {
-  #connection: napi.Connection
+  readonly #connection: napi.Connection
   init: QuicStreamMuxerFactoryInit
   protocol: string = 'quic'
 
-  constructor(init: QuicStreamMuxerFactoryInit) {
+  constructor (init: QuicStreamMuxerFactoryInit) {
     this.#connection = init.connection
     this.init = init
   }
 
-  createStreamMuxer(init?: StreamMuxerInit): StreamMuxer {
+  createStreamMuxer (init?: StreamMuxerInit): StreamMuxer {
     return new QuicStreamMuxer({
       ...init,
       connection: this.#connection,
-      logger: this.init.logger,
+      logger: this.init.logger
     })
   }
 }
@@ -40,17 +38,17 @@ type QuicStreamMuxerInit = StreamMuxerInit & {
 
 class QuicStreamMuxer implements StreamMuxer {
   id: string
-  #connection: napi.Connection
+  readonly #connection: napi.Connection
   init: QuicStreamMuxerInit
   log: Logger
 
   protocol: string = 'quic'
   streams: Stream[] = []
-  source: AsyncGenerator<Uint8Array | Uint8ArrayList> = (async function* () {})()
-  sink: Sink<AsyncGenerator<Uint8Array | Uint8ArrayList>> = async function* () {}
+  source: AsyncGenerator<Uint8Array | Uint8ArrayList> = (async function * () {})()
+  sink: Sink<AsyncGenerator<Uint8Array | Uint8ArrayList>> = async function * () {}
   controller = new AbortController()
 
-  constructor(init: QuicStreamMuxerInit) {
+  constructor (init: QuicStreamMuxerInit) {
     this.id = init.connection.id()
     this.#connection = init.connection
     this.init = init
@@ -60,9 +58,9 @@ class QuicStreamMuxer implements StreamMuxer {
     this.log('new', this.id)
   }
 
-  async awaitInboundStreams(): Promise<void> {
+  async awaitInboundStreams (): Promise<void> {
     const aborted = new Promise((resolve) => {
-      this.controller.signal.addEventListener('abort', () => resolve(undefined), { once: true })
+      this.controller.signal.addEventListener('abort', () => { resolve(undefined) }, { once: true })
     })
     while (true) {
       const stream = await Promise.race([
@@ -82,35 +80,54 @@ class QuicStreamMuxer implements StreamMuxer {
     this.log('%s no longer awaiting inbound streams', this.id)
   }
 
-  private onInboundStream = (str: napi.Stream) => {
+  private readonly onInboundStream = (str: napi.Stream): void => {
     const stream = new QuicStream({
-      connId: this.#connection.id(),
+      id: str.id(),
       stream: str,
       direction: 'inbound',
-      logger: this.init.logger,
+      log: this.init.logger.forComponent(`libp2p:quic:stream:${this.#connection.id()}:${str.id()}:inbound`),
+      onEnd: () => {
+        const index = this.streams.findIndex(s => s === stream)
+        if (index !== -1) {
+          this.streams.splice(index, 1)
+        }
+
+        this.init.onStreamEnd?.(stream)
+      }
     })
     this.streams.push(stream)
     this.init.onIncomingStream?.(stream)
   }
 
-  async newStream(name?: string): Promise<Stream> {
+  async newStream (name?: string): Promise<Stream> {
+    const str = await this.#connection.outboundStream()
     const stream = new QuicStream({
-      connId: this.#connection.id(),
-      stream:  await this.#connection.outboundStream(),
+      id: str.id(),
+      stream: str,
       direction: 'outbound',
-      logger: this.init.logger,
+      log: this.init.logger.forComponent(`libp2p:quic:stream:${this.#connection.id()}:${str.id()}:outbound`),
+      onEnd: () => {
+        const index = this.streams.findIndex(s => s === stream)
+        if (index !== -1) {
+          this.streams.splice(index, 1)
+        }
+
+        this.init.onStreamEnd?.(stream)
+      }
     })
     this.streams.push(stream)
     return stream
   }
-  async close(options?: AbortOptions): Promise<void> {
+
+  async close (options?: AbortOptions): Promise<void> {
     this.controller.abort()
-    await Promise.all(this.streams.map((stream) => stream.close(options)))
+    await Promise.all(this.streams.map(async (stream) => stream.close(options)))
     this.streams = []
 
     this.log('%s closed', this.id)
   }
-  abort(err: Error): void {
+
+  abort (err: Error): void {
     this.controller.abort()
     for (const stream of this.streams) {
       stream.abort(err)
