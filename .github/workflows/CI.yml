@@ -327,7 +327,7 @@ jobs:
         shell: bash
       - name: Build ts
         if: ${{ steps.release.outputs.release_created }}
-        run: yarn build:ts
+        run: npx aegir build
         shell: bash
       - name: Publish
         if: ${{ steps.release.outputs.release_created }}
