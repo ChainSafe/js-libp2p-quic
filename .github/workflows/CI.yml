@@ -176,7 +176,7 @@ jobs:
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: docker run --rm -v "$(pwd):/build" -w /build node:${{ matrix.node }}-slim corepack enable && yarn run test
+        run: docker run --rm -v "$(pwd):/build" -w /build node:${{ matrix.node }} corepack enable && yarn run test
   test-linux-x64-musl-binding:
     name: Test bindings on x86_64-unknown-linux-musl - node@${{ matrix.node }}
     needs:
@@ -246,7 +246,7 @@ jobs:
       - name: Setup and run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: node:${{ matrix.node }}-slim
+          image: node:${{ matrix.node }}
           options: '--platform linux/arm64 -v ${{ github.workspace }}:/build -w /build'
           run: corepack enable && yarn run test
   test-linux-aarch64-musl-binding:
