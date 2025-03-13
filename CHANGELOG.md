@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.5](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.4...v1.0.5) (2025-03-13)
+
+
+### Bug Fixes
+
+* add browser shim ([#18](https://github.com/ChainSafe/js-libp2p-quic/issues/18)) ([557234d](https://github.com/ChainSafe/js-libp2p-quic/commit/557234d7920d95d54a50c8c2efb4e76c822fd287))
+* build ts before publish ([#19](https://github.com/ChainSafe/js-libp2p-quic/issues/19)) ([c22f429](https://github.com/ChainSafe/js-libp2p-quic/commit/c22f4299b3c29c7834d524b3ce8c5d3d1a2f15ac))
+
 ## [1.0.4](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.3...v1.0.4) (2025-03-13)
 
 
