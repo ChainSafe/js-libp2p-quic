@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.3...v1.0.4) (2025-03-13)
+
+
+### Bug Fixes
+
+* pass interface compliance tests ([#15](https://github.com/ChainSafe/js-libp2p-quic/issues/15)) ([4f9024e](https://github.com/ChainSafe/js-libp2p-quic/commit/4f9024e4d771d9f1adcbdeb78a90f9165e141726))
+
 ## [1.0.3](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.2...v1.0.3) (2025-03-12)
 
 
