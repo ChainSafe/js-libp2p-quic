@@ -30,7 +30,8 @@ impl Server {
   pub fn new(config: &config::QuinnConfig, ip: String, port: u16) -> Result<Self> {
     let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
     let socket_addr = SocketAddr::new(ip_addr, port);
-    let socket = std::net::UdpSocket::bind(socket_addr)?;
+    let socket = socket::create_socket(config.socket_config, socket_addr)?;
+
     let socket = block_on(async move{
       socket::UdpSocket::wrap_udp_socket(socket)
     })?;
@@ -93,7 +94,7 @@ impl Client {
       SocketFamily::Ipv6 => SocketAddr::new(std::net::Ipv6Addr::UNSPECIFIED.into(), 0),
     };
     let mut endpoint = block_on(async move {
-      let socket = std::net::UdpSocket::bind(bind_addr)?;
+      let socket = socket::create_socket(config.socket_config,bind_addr)?;
       let endpoint = quinn::Endpoint::new(
         config.endpoint_config.clone(),
         None,

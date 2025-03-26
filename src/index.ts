@@ -51,5 +51,7 @@ export const defaultOptions: QuicOptions = {
   keepAliveInterval: 5_000,
   maxConcurrentStreamLimit: 256,
   maxStreamData: 10_000_000,
-  maxConnectionData: 15_000_000
+  maxConnectionData: 15_000_000,
+  receiveBufferSize: 500_000,
+  sendBufferSize: 500_000,
 }
