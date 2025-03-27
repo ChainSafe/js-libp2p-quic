@@ -21,6 +21,7 @@ rustls = { version = "0.23.23", features = ["ring"] }
 tokio = { version = "1.43.0", features = ["full"] }
 # included to satisfy napi dependencies
 ctor = "0.3.6"
+socket2 = "0.5.8"
 
 [build-dependencies]
 napi-build = "2.1.4"

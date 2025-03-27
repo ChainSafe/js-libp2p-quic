@@ -382,13 +382,38 @@ export interface Config {
    * concurrently by the remote peer.
    */
   maxConcurrentStreamLimit: number
-  /** Max unacknowledged data in bytes that may be sent on a single stream. */
+  /**
+   * Maximum number of bytes the peer may transmit without acknowledgement on any one stream
+   * before becoming blocked.
+   *
+   * This should be set to at least the expected connection latency multiplied by the maximum
+   * desired throughput. Setting this smaller than `max_connection_data` helps ensure that a single
+   * stream doesn't monopolize receive buffers, which may otherwise occur if the application
+   * chooses not to read from a large stream for a time while still requiring data on other
+   * streams.
+   */
   maxStreamData: number
   /**
-   * Max unacknowledged data in bytes that may be sent in total on all streams
-   * of a connection.
+   * Maximum number of bytes the peer may transmit across all streams of a connection before
+   * becoming blocked.
+   *
+   * This should be set to at least the expected connection latency multiplied by the maximum
+   * desired throughput. Larger values can be useful to allow maximum throughput within a
+   * stream while another is blocked.
    */
   maxConnectionData: number
+  /**
+   * OS socket receive buffer size.
+   *
+   * If this is set higher than the OS maximum, it will be clamped to the maximum allowed size.
+   */
+  receiveBufferSize: number
+  /**
+   * OS socket send buffer size.
+   *
+   * If this is set higher than the OS maximum, it will be clamped to the maximum allowed size.
+   */
+  sendBufferSize: number
 }
 
 export declare const enum SocketFamily {

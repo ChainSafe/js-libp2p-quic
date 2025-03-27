@@ -64,8 +64,10 @@ pub struct Config {
   /// Timeout for the initial handshake when establishing a connection.
   /// The actual timeout is the minimum of this and the [`Config::max_idle_timeout`].
   pub handshake_timeout: u32,
+
   /// Maximum duration of inactivity in ms to accept before timing out the connection.
   pub max_idle_timeout: u32,
+
   /// Period of inactivity before sending a keep-alive packet.
   /// Must be set lower than the idle_timeout of both
   /// peers to be effective.
@@ -73,16 +75,44 @@ pub struct Config {
   /// See [`quinn::TransportConfig::keep_alive_interval`] for more
   /// info.
   pub keep_alive_interval: u32,
+
   /// Maximum number of incoming bidirectional streams that may be open
   /// concurrently by the remote peer.
   pub max_concurrent_stream_limit: u32,
 
-  /// Max unacknowledged data in bytes that may be sent on a single stream.
+  /// Maximum number of bytes the peer may transmit without acknowledgement on any one stream
+  /// before becoming blocked.
+  ///
+  /// This should be set to at least the expected connection latency multiplied by the maximum
+  /// desired throughput. Setting this smaller than `max_connection_data` helps ensure that a single
+  /// stream doesn't monopolize receive buffers, which may otherwise occur if the application
+  /// chooses not to read from a large stream for a time while still requiring data on other
+  /// streams.
   pub max_stream_data: u32,
 
-  /// Max unacknowledged data in bytes that may be sent in total on all streams
-  /// of a connection.
+  /// Maximum number of bytes the peer may transmit across all streams of a connection before
+  /// becoming blocked.
+  ///
+  /// This should be set to at least the expected connection latency multiplied by the maximum
+  /// desired throughput. Larger values can be useful to allow maximum throughput within a
+  /// stream while another is blocked.
   pub max_connection_data: u32,
+
+  /// OS socket receive buffer size.
+  ///
+  /// If this is set higher than the OS maximum, it will be clamped to the maximum allowed size.
+  pub receive_buffer_size: u32,
+
+  /// OS socket send buffer size.
+  ///
+  /// If this is set higher than the OS maximum, it will be clamped to the maximum allowed size.
+  pub send_buffer_size: u32,
+}
+
+#[derive(Clone, Copy)]
+pub struct SocketConfig {
+  pub receive_buffer_size: u32,
+  pub send_buffer_size: u32,
 }
 
 /// Configuration used by the QUIC library
@@ -92,6 +122,7 @@ pub struct QuinnConfig {
   pub(crate) client_config: quinn::ClientConfig,
   pub(crate) server_config: quinn::ServerConfig,
   pub(crate) endpoint_config: quinn::EndpointConfig,
+  pub(crate) socket_config: SocketConfig,
 }
 
 #[napi]
@@ -113,20 +144,25 @@ impl TryFrom<Config> for QuinnConfig {
       max_connection_data,
       max_stream_data,
       handshake_timeout: _,
+      receive_buffer_size,
+      send_buffer_size,
     } = config;
 
     let keypair = libp2p_identity::Keypair::from_protobuf_encoding(&private_key_proto)
       .map_err(|e| ConfigError::InvalidPrivateKey(e))?;
 
     let mut transport = quinn::TransportConfig::default();
+
+    // Disable features we don't use/want
     // Disable uni-directional streams.
     transport.max_concurrent_uni_streams(0u32.into());
-    transport.max_concurrent_bidi_streams(max_concurrent_stream_limit.into());
     // Disable datagrams.
     transport.datagram_receive_buffer_size(None);
+    transport.allow_spin(false);
+
+    transport.max_concurrent_bidi_streams(max_concurrent_stream_limit.into());
     transport.keep_alive_interval(Some(Duration::from_millis(keep_alive_interval.into())));
     transport.max_idle_timeout(Some(quinn::VarInt::from_u32(max_idle_timeout).into()));
-    transport.allow_spin(false);
     transport.stream_receive_window(max_stream_data.into());
     transport.receive_window(max_connection_data.into());
     transport.mtu_discovery_config(Default::default());
@@ -170,6 +206,10 @@ impl TryFrom<Config> for QuinnConfig {
       client_config,
       server_config,
       endpoint_config,
+      socket_config: SocketConfig {
+        receive_buffer_size,
+        send_buffer_size,
+      },
     })
   }
 }

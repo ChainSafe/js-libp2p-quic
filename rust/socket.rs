@@ -23,6 +23,19 @@ use std::{
 use quinn::udp;
 use quinn::{AsyncUdpSocket, UdpPoller};
 use tokio::{io::Interest, sync::RwLock};
+use socket2::Socket;
+
+use crate::config;
+
+pub fn create_socket(config: config::SocketConfig, socket_addr: std::net::SocketAddr) -> napi::Result<std::net::UdpSocket> {
+    let socket = std::net::UdpSocket::bind(socket_addr)?;
+
+    let socket = Socket::from(socket);
+    socket.set_send_buffer_size(config.send_buffer_size as usize).unwrap();
+    socket.set_recv_buffer_size(config.receive_buffer_size as usize).unwrap();
+    let socket = std::net::UdpSocket::from(socket);
+    Ok(socket)
+}
 
 #[derive(Debug)]
 pub struct UdpSocket {
@@ -242,5 +255,38 @@ where
 impl<MakeFut, Fut> std::fmt::Debug for UdpPollHelper<MakeFut, Fut> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.debug_struct("UdpPollHelper").finish_non_exhaustive()
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  /// Check how buffer sizes are set. On my (linux, ubuntu 24.04.2) machine, this is the output:
+  ///
+  /// send buffer size: 212992
+  /// receive buffer size: 212992
+  /// updating buffer sizes: 1000000
+  /// send buffer size: 425984
+  /// receive buffer size: 425984
+  #[test]
+  fn check_default_buffer_sizes() {
+    let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+    let socket = Socket::from(socket);
+    let send_buffer_size = socket.send_buffer_size().unwrap();
+    let receive_buffer_size = socket.recv_buffer_size().unwrap();
+    println!("send buffer size: {}", send_buffer_size);
+    println!("receive buffer size: {}", receive_buffer_size);
+
+    let new_size: usize = 1_000_000;
+    println!("updating buffer sizes: {}", new_size);
+
+    socket.set_send_buffer_size(new_size).unwrap();
+    socket.set_recv_buffer_size(new_size).unwrap();
+
+    let send_buffer_size = socket.send_buffer_size().unwrap();
+    let receive_buffer_size = socket.recv_buffer_size().unwrap();
+    println!("send buffer size: {}", send_buffer_size);
+    println!("receive buffer size: {}", receive_buffer_size);
   }
 }
