@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.5...v1.1.0) (2025-03-27)
+
+
+### Features
+
+* add socket buffer size configuration ([#22](https://github.com/ChainSafe/js-libp2p-quic/issues/22)) ([8f9c30f](https://github.com/ChainSafe/js-libp2p-quic/commit/8f9c30fd14ccd004d68b0407b3f350ce4074d976))
+
 ## [1.0.5](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.4...v1.0.5) (2025-03-13)
 
 
