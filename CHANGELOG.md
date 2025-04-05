@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.0...v1.1.1) (2025-04-05)
+
+
+### Bug Fixes
+
+* remove aarch64 windows target ([#25](https://github.com/ChainSafe/js-libp2p-quic/issues/25)) ([bda4a0c](https://github.com/ChainSafe/js-libp2p-quic/commit/bda4a0cf74c9a26a9669e5ad23b0468c77567ad4))
+
 ## [1.1.0](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.0.5...v1.1.0) (2025-03-27)
 
 
