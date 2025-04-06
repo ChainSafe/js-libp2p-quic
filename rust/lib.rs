@@ -289,14 +289,14 @@ impl Stream {
   //   })
   // }
 
-  // #[napi(ts_return_type = "Promise<number | undefined>")]
-  // pub fn read4(&mut self, data: JsBuffer) -> AsyncTask<Read> {
-  //   let data = data.into_ref().unwrap();
-  //   AsyncTask::new(Read {
-  //     buf: data,
-  //     recv: self.recv.clone(),
-  //   })
-  // }
+  #[napi(ts_return_type = "Promise<number | undefined>")]
+  pub fn read4(&mut self, data: Buffer) -> AsyncTask<Read> {
+    // let data = data.into_ref().unwrap();
+    AsyncTask::new(Read {
+      buf: data,
+      recv: self.recv.clone(),
+    })
+  }
 
   // #[napi(ts_return_type = "Promise<number | undefined>")]
   // pub fn read5(&mut self, env: Env, data: JsBuffer) -> Result<JsObject> {
@@ -429,43 +429,39 @@ fn to_err<T: ToString>(str: T) -> napi::Error {
 //   }
 // }
 
-// pub struct Read {
-//   buf: Ref<JsBufferValue>,
-//   recv: Arc<Mutex<RecvStream>>,
-// }
+pub struct Read {
+  buf: Buffer,
+  recv: Arc<Mutex<quinn::RecvStream>>,
+}
 
-// impl Task for Read {
-//   type Output = Option<u32>;
-//   type JsValue = Either<JsNumber, JsUndefined>;
+impl Task for Read {
+  type Output = Option<u32>;
+  type JsValue = Option<u32>;
 
-//   fn compute(&mut self) -> Result<Self::Output> {
-//     block_on(async move {
-//       // unsafe, but we know the data is not going to be modified by JS
-//       let d = self.buf.as_ref();
-//       let data_mut = unsafe {
-//         let ptr = d.as_ptr() as *mut u8;
-//         std::slice::from_raw_parts_mut(ptr, d.len())
-//       };
-//       let chunk = self.recv.lock().await.read(data_mut).await.map_err(to_err)?;
-//       match chunk {
-//         Some(len) => Ok(Some(len as u32)),
-//         None => Ok(None),
-//       }
-//     })
-//   }
+  fn compute(&mut self) -> Result<Self::Output> {
+    block_on(async move {
+      // unsafe, but we know the data is not going to be modified by JS
+      let d = self.buf.as_ref();
+      let data_mut = unsafe {
+        let ptr = d.as_ptr() as *mut u8;
+        std::slice::from_raw_parts_mut(ptr, d.len())
+      };
+      let chunk = self.recv.lock().await.read(data_mut).await.map_err(to_err)?;
+      match chunk {
+        Some(len) => Ok(Some(len as u32)),
+        None => Ok(None),
+      }
+    })
+  }
 
-//   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-//     if let Some(output) = output {
-//       env.create_uint32(output).map(Either::A)
-//     } else {
-//       env.get_undefined().map(Either::B)
-//     }
-//   }
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    Ok(output)
+  }
 
-//   fn finally(&mut self, env: Env) -> Result<()> {
+//  fn finally(&mut self, env: Env) -> Result<()> {
 //     self.buf.unref(env)?;
 //     Ok(())
 //   }
-// }
+}
 
 // mod out;

@@ -51,7 +51,7 @@ export class QuicStream extends AbstractStream {
       while (true) {
         this.log.trace('reading')
         const chunk = Buffer.allocUnsafe(CHUNK_SIZE)
-        const length = await this.#stream.read(chunk)
+        const length = await this.#stream.read4(chunk)
 
         if (length == null) {
           break

@@ -351,6 +351,7 @@ export declare class Stream {
   id(): string
   read(buf: Uint8Array): Promise<number | null>
   read2(): Promise<Uint8Array | null>
+  read4(data: Buffer): Promise<number | undefined>
   write(data: Uint8Array): Promise<void>
   finishWrite(): Promise<void>
   resetWrite(): Promise<void>
