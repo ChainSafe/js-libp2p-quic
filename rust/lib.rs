@@ -328,6 +328,7 @@ impl Stream {
 
   #[napi]
   pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
+    let data = data.to_vec();
     self.send.lock().await.write_all(&data).await.map_err(to_err)
   }
 
