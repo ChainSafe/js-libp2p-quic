@@ -1,9 +1,8 @@
-/* eslint-disable no-console */
 /* eslint-env mocha */
 
 import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger } from '@libp2p/logger'
-import { multiaddr, type Multiaddr } from '@multiformats/multiaddr'
+import { multiaddr } from '@multiformats/multiaddr'
 import { expect } from 'aegir/chai'
 import { pEvent } from 'p-event'
 import { stubInterface } from 'sinon-ts'
@@ -11,6 +10,7 @@ import { quic } from '../src/index.js'
 import { createComponents } from './util.js'
 import type { QuicComponents } from '../src/index.js'
 import type { Listener, Upgrader } from '@libp2p/interface'
+import type { Multiaddr } from '@multiformats/multiaddr'
 
 describe('Quic Transport', () => {
   let components: QuicComponents

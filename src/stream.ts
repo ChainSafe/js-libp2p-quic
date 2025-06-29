@@ -1,7 +1,8 @@
-import { AbstractStream, type AbstractStreamInit } from '@libp2p/utils/abstract-stream'
+import { AbstractStream } from '@libp2p/utils/abstract-stream'
 import { Uint8ArrayList } from 'uint8arraylist'
 import type * as napi from './napi.js'
 import type { AbortOptions } from '@libp2p/interface'
+import type { AbstractStreamInit } from '@libp2p/utils/abstract-stream'
 
 export interface QuicStreamInit extends AbstractStreamInit {
   stream: napi.Stream

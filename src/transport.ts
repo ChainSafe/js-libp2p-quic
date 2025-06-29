@@ -2,12 +2,13 @@ import { privateKeyToProtobuf } from '@libp2p/crypto/keys'
 import { AbortError, serviceCapabilities, transportSymbol } from '@libp2p/interface'
 import { QuicConnection } from './connection.js'
 import { dialFilter, listenFilter } from './filter.js'
-import { QuicListener, type QuicCreateListenerOptions } from './listener.js'
+import { QuicListener } from './listener.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
+import type { QuicComponents, QuicDialOptions, QuicOptions } from './index.js'
+import type { QuicCreateListenerOptions } from './listener.js'
 import type { Connection, CounterGroup, Listener, Logger, MultiaddrFilter, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
-import type { QuicComponents, QuicDialOptions, QuicOptions } from './index.js'
 
 interface QuicTransportMetrics {
   events: CounterGroup
