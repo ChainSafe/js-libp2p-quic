@@ -1,10 +1,11 @@
 import { setMaxListeners, TypedEventEmitter } from '@libp2p/interface'
-import { fromStringTuples, type Multiaddr } from '@multiformats/multiaddr'
+import { fromStringTuples } from '@multiformats/multiaddr'
 import { QuicConnection } from './connection.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
 import { getMultiaddrs } from './utils.js'
 import type { ComponentLogger, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
+import type { Multiaddr } from '@multiformats/multiaddr'
 
 export interface QuicCreateListenerOptions extends CreateListenerOptions {
 
