@@ -66,7 +66,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   }
 
   updateAnnounceAddrs (addrs: Multiaddr[]): void {
-    throw new Error('Method not implemented.')
+
   }
 
   getAddrs (): Multiaddr[] {
