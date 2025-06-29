@@ -1,8 +1,8 @@
-import { type Uint8ArrayList } from 'uint8arraylist'
 import { QuicStream } from './stream.js'
 import type * as napi from './napi.js'
 import type { AbortOptions, ComponentLogger, Logger, Stream, StreamMuxer, StreamMuxerFactory, StreamMuxerInit } from '@libp2p/interface'
 import type { Sink } from 'it-stream-types'
+import type { Uint8ArrayList } from 'uint8arraylist'
 
 interface QuicStreamMuxerFactoryInit {
   connection: napi.Connection

@@ -1,9 +1,10 @@
 import { TypedEventEmitter } from '@libp2p/interface'
-import { multiaddr, type Multiaddr } from '@multiformats/multiaddr'
-import { type Uint8ArrayList } from 'uint8arraylist'
+import { multiaddr } from '@multiformats/multiaddr'
 import type * as napi from './napi.js'
 import type { AbortOptions, ComponentLogger, CounterGroup, Direction, Logger, MultiaddrConnection, MultiaddrConnectionTimeline } from '@libp2p/interface'
+import type { Multiaddr } from '@multiformats/multiaddr'
 import type { Sink } from 'it-stream-types'
+import type { Uint8ArrayList } from 'uint8arraylist'
 
 interface QuicConnectionInit {
   connection: napi.Connection
@@ -13,7 +14,7 @@ interface QuicConnectionInit {
 }
 
 interface QuicConnectionEvents {
-  'close': CustomEvent
+  close: CustomEvent
 }
 
 export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> implements MultiaddrConnection {
