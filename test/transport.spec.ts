@@ -176,7 +176,7 @@ describe('Quic Transport', () => {
     expect(addrs).to.have.lengthOf(2, 'did not listen on correct amount of addresses')
 
     for (const addr of addrs) {
-      const { host, port } = addr.toOptions()
+      const { port } = addr.toOptions()
       expect(port).to.equal(14000, 'did not listen on port')
     }
   })
