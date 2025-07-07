@@ -1,5 +1,6 @@
 import { setMaxListeners, TypedEventEmitter } from '@libp2p/interface'
 import { multiaddr } from '@multiformats/multiaddr'
+import { raceSignal } from 'race-signal'
 import { QuicConnection } from './connection.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
@@ -137,30 +138,27 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     if (this.state.status === 'listening') {
       const signal = this.state.controller.signal
       const listenAddr = this.state.listenAddr
-      const aborted = new Promise((resolve) => {
-        signal.addEventListener('abort', () => { resolve(undefined) }, { once: true })
-      })
+
       while (true) {
         try {
           const listenerPromise = this.state.listener.inboundConnection()
           listenerPromise
             .then(() => this.metrics?.events.increment({ connect: true }))
             .catch(() => this.metrics?.events.increment({ error: true }))
-          const connection = await Promise.race([
-            aborted,
-            listenerPromise
-          ]) as napi.Connection | undefined
-          if (connection == null) {
-            break
-          }
 
+          const connection = await raceSignal(listenerPromise, signal)
           this.onInboundConnection(connection).catch((e) => {
             this.log.error('%s error handling inbound connection', listenAddr.toString(), e)
           })
         } catch (e) {
           this.log.error('%s error accepting connection', listenAddr.toString(), e)
+
+          if (signal.aborted) {
+            break
+          }
         }
       }
+
       this.log('%s no longer awaiting inbound connections', listenAddr.toString())
     }
   }
