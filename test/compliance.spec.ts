@@ -33,36 +33,33 @@ describe('Interface compliance tests (IPv4)', () => {
   })
 })
 
-// IPv6 isn't always available in CI
-if (!process.env.CI) {
-  describe('Interface compliance tests (IPv6)', function () {
-    transportCompliance({
-      async setup () {
-        const dialer = {
-          transports: [
-            quic()
-          ],
-          connectionMonitor: {
-            enabled: false
-          }
+describe('Interface compliance tests (IPv6)', function () {
+  transportCompliance({
+    async setup () {
+      const dialer = {
+        transports: [
+          quic()
+        ],
+        connectionMonitor: {
+          enabled: false
         }
+      }
 
-        return {
-          dialer,
-          listener: {
-            addresses: {
-              listen: [
-                '/ip6/::/udp/0/quic-v1',
-                '/ip6/::/udp/0/quic-v1'
-              ]
-            },
-            ...dialer
+      return {
+        dialer,
+        listener: {
+          addresses: {
+            listen: [
+              '/ip6/::/udp/0/quic-v1',
+              '/ip6/::/udp/0/quic-v1'
+            ]
           },
-          dialMultiaddrMatcher: QUICV1,
-          listenMultiaddrMatcher: QUICV1
-        }
-      },
-      async teardown () {}
-    })
+          ...dialer
+        },
+        dialMultiaddrMatcher: QUICV1,
+        listenMultiaddrMatcher: QUICV1
+      }
+    },
+    async teardown () {}
   })
-}
+})
