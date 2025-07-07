@@ -853,13 +853,13 @@ __metadata:
   resolution: "@chainsafe/libp2p-quic@workspace:."
   dependencies:
     "@chainsafe/is-ip": "npm:^2.1.0"
-    "@libp2p/crypto": "npm:^5.0.12"
-    "@libp2p/interface": "npm:^2.6.0"
-    "@libp2p/interface-compliance-tests": "npm:^6.3.2"
-    "@libp2p/logger": "npm:^5.0.1"
-    "@libp2p/utils": "npm:^6.5.8"
+    "@libp2p/crypto": "npm:^5.1.7"
+    "@libp2p/interface": "npm:^2.10.5"
+    "@libp2p/interface-compliance-tests": "npm:^6.4.15"
+    "@libp2p/logger": "npm:^5.1.21"
+    "@libp2p/utils": "npm:^6.7.1"
     "@multiformats/multiaddr": "npm:^12.4.0"
-    "@multiformats/multiaddr-matcher": "npm:^1.6.0"
+    "@multiformats/multiaddr-matcher": "npm:^2.0.1"
     "@napi-rs/cli": "npm:^3.0.0-alpha.70"
     aegir: "npm:^47.0.19"
     it-stream-types: "npm:^2.0.2"
@@ -1286,9 +1286,9 @@ __metadata:
   linkType: hard
 
 "@cspell/dict-npm@npm:^5.2.9":
-  version: 5.2.9
-  resolution: "@cspell/dict-npm@npm:5.2.9"
-  checksum: 10c0/dada4658753cc0a104e09ad5c6d6794094e67c7829d6d594d6c0cc2a1ca290976afba54f8385ea548b2835f8319bcb41a010a23cdc0d0cf88a455be34af8f720
+  version: 5.2.10
+  resolution: "@cspell/dict-npm@npm:5.2.10"
+  checksum: 10c0/5e3f429960db89e8d20c07b2e5404f9118cebb3ac68a8ba3b949fb3682dea04ffddaac65fea70dd363e48a7b60050ba2c215f796c82fdc4d22c7b45f7ab2e3c8
   languageName: node
   linkType: hard
 
@@ -1358,9 +1358,9 @@ __metadata:
   linkType: hard
 
 "@cspell/dict-software-terms@npm:^5.1.2":
-  version: 5.1.2
-  resolution: "@cspell/dict-software-terms@npm:5.1.2"
-  checksum: 10c0/959af4d079303bb28b5584eb439f71844bb5aad208f03157f4fe18b6b1d27283a9dde6393a2c2cee0038b01fa3174e03294bb922cbaced8f960a00068f81a025
+  version: 5.1.3
+  resolution: "@cspell/dict-software-terms@npm:5.1.3"
+  checksum: 10c0/3c229d13f35cfca1ce801f23468b040ecb17d9d91b1aaa3de831bb108313d51e3237a5585f8bf3d12b43d72a12bab371b91ea5ab14185ddfb195e9ae3af0c65c
   languageName: node
   linkType: hard
 
@@ -1466,30 +1466,30 @@ __metadata:
   linkType: hard
 
 "@emnapi/core@npm:^1.4.3":
-  version: 1.4.3
-  resolution: "@emnapi/core@npm:1.4.3"
+  version: 1.4.4
+  resolution: "@emnapi/core@npm:1.4.4"
   dependencies:
-    "@emnapi/wasi-threads": "npm:1.0.2"
+    "@emnapi/wasi-threads": "npm:1.0.3"
     tslib: "npm:^2.4.0"
-  checksum: 10c0/e30101d16d37ef3283538a35cad60e22095aff2403fb9226a35330b932eb6740b81364d525537a94eb4fb51355e48ae9b10d779c0dd1cdcd55d71461fe4b45c7
+  checksum: 10c0/a3a87b384de7c87edc8d64dfbd0c695fb8e9c8547d2d53f284b15415cfea29150f933cb21017dc4d0fa9dbfb2b544d23c77da7cde8c82f21e68323db50a829dd
   languageName: node
   linkType: hard
 
 "@emnapi/runtime@npm:^1.4.3":
-  version: 1.4.3
-  resolution: "@emnapi/runtime@npm:1.4.3"
+  version: 1.4.4
+  resolution: "@emnapi/runtime@npm:1.4.4"
   dependencies:
     tslib: "npm:^2.4.0"
-  checksum: 10c0/3b7ab72d21cb4e034f07df80165265f85f445ef3f581d1bc87b67e5239428baa00200b68a7d5e37a0425c3a78320b541b07f76c5530f6f6f95336a6294ebf30b
+  checksum: 10c0/ec91747af3104ac34d4767fab922c8fe78ddc8ec83af3e3fb0edbf63cdb683fb8582be36afda7d48249fe729d4a31c34752c6e051770a762a68bce67a7408189
   languageName: node
   linkType: hard
 
-"@emnapi/wasi-threads@npm:1.0.2":
-  version: 1.0.2
-  resolution: "@emnapi/wasi-threads@npm:1.0.2"
+"@emnapi/wasi-threads@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@emnapi/wasi-threads@npm:1.0.3"
   dependencies:
     tslib: "npm:^2.4.0"
-  checksum: 10c0/f0621b1fc715221bd2d8332c0ca922617bcd77cdb3050eae50a124eb8923c54fa425d23982dc8f29d505c8798a62d1049bace8b0686098ff9dd82270e06d772e
+  checksum: 10c0/00cae4dd64143cca21a3aedbf64a7a5528a5991b69bcc0b7306812ff31a3fdc4aaf5bc9413a29fbd5d577c78aae49db4fc4e736d013aec5d416b5a64d403f391
   languageName: node
   linkType: hard
 
@@ -2344,7 +2344,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/crypto@npm:^5.0.12, @libp2p/crypto@npm:^5.1.7":
+"@libp2p/crypto@npm:^5.1.7":
   version: 5.1.7
   resolution: "@libp2p/crypto@npm:5.1.7"
   dependencies:
@@ -2372,23 +2372,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/interface-compliance-tests@npm:^6.3.2":
-  version: 6.4.13
-  resolution: "@libp2p/interface-compliance-tests@npm:6.4.13"
+"@libp2p/interface-compliance-tests@npm:^6.4.15":
+  version: 6.4.15
+  resolution: "@libp2p/interface-compliance-tests@npm:6.4.15"
   dependencies:
     "@libp2p/crypto": "npm:^5.1.7"
     "@libp2p/echo": "npm:^2.1.27"
     "@libp2p/interface": "npm:^2.10.5"
     "@libp2p/interface-internal": "npm:^2.3.18"
     "@libp2p/logger": "npm:^5.1.21"
-    "@libp2p/memory": "npm:^1.1.12"
+    "@libp2p/memory": "npm:^1.1.13"
     "@libp2p/multistream-select": "npm:^6.0.28"
     "@libp2p/peer-collections": "npm:^6.0.34"
     "@libp2p/peer-id": "npm:^5.1.8"
     "@libp2p/plaintext": "npm:^2.0.28"
     "@libp2p/utils": "npm:^6.7.1"
     "@multiformats/multiaddr": "npm:^12.4.4"
-    "@multiformats/multiaddr-matcher": "npm:^1.7.2"
+    "@multiformats/multiaddr-matcher": "npm:^2.0.0"
     abortable-iterator: "npm:^5.1.0"
     aegir: "npm:^47.0.14"
     any-signal: "npm:^4.1.1"
@@ -2404,7 +2404,7 @@ __metadata:
     it-pushable: "npm:^3.2.3"
     it-stream-types: "npm:^2.0.2"
     it-to-buffer: "npm:^4.0.9"
-    libp2p: "npm:^2.8.12"
+    libp2p: "npm:^2.8.14"
     main-event: "npm:^1.0.1"
     p-defer: "npm:^4.0.1"
     p-event: "npm:^6.0.1"
@@ -2416,7 +2416,7 @@ __metadata:
     sinon: "npm:^20.0.0"
     uint8arraylist: "npm:^2.4.8"
     uint8arrays: "npm:^5.1.0"
-  checksum: 10c0/2f2ed55568961cbde433e3131f567d5b1ffc10d92aea05612a8215367e1ff40355352b95cf7533e1bd5f7f98fe9add5635ca85dae47cc652e8011f718c4ff1ee
+  checksum: 10c0/eff0069612a3e6dbf918835fc52a184b801ae4c574b719429b6313cd6359b5829917c33af558638be08f2f194826279b460b685e08b11d4ea4caf84aa92f17e7
   languageName: node
   linkType: hard
 
@@ -2432,7 +2432,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/interface@npm:^2.10.5, @libp2p/interface@npm:^2.6.0":
+"@libp2p/interface@npm:^2.10.5":
   version: 2.10.5
   resolution: "@libp2p/interface@npm:2.10.5"
   dependencies:
@@ -2448,7 +2448,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/logger@npm:^5.0.1, @libp2p/logger@npm:^5.1.18, @libp2p/logger@npm:^5.1.21":
+"@libp2p/logger@npm:^5.1.18, @libp2p/logger@npm:^5.1.21":
   version: 5.1.21
   resolution: "@libp2p/logger@npm:5.1.21"
   dependencies:
@@ -2461,13 +2461,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/memory@npm:^1.1.12":
-  version: 1.1.12
-  resolution: "@libp2p/memory@npm:1.1.12"
+"@libp2p/memory@npm:^1.1.13":
+  version: 1.1.13
+  resolution: "@libp2p/memory@npm:1.1.13"
   dependencies:
     "@libp2p/interface": "npm:^2.10.5"
     "@multiformats/multiaddr": "npm:^12.4.4"
-    "@multiformats/multiaddr-matcher": "npm:^1.7.2"
+    "@multiformats/multiaddr-matcher": "npm:^2.0.0"
     "@types/sinon": "npm:^17.0.4"
     delay: "npm:^6.0.0"
     it-map: "npm:^3.1.3"
@@ -2476,7 +2476,7 @@ __metadata:
     nanoid: "npm:^5.1.5"
     race-signal: "npm:^1.1.3"
     uint8arraylist: "npm:^2.4.8"
-  checksum: 10c0/375633220db7bc76dc7cde3edd23e2e05b8280b453c9225c04263fb63289a8601d18d7aad1bef3e11166a1294af97be4ea640b9106587c13d30b147063a2f12b
+  checksum: 10c0/0612e3f50a31808d73eec62f4c1bf88f04be88980915abf841f3f0f0ad8cda2929432338513ec1dbc9dfbc95e12507fbde57610022bcec83a3497c5e02b8e907
   languageName: node
   linkType: hard
 
@@ -2577,7 +2577,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@libp2p/utils@npm:^6.5.8, @libp2p/utils@npm:^6.7.1":
+"@libp2p/utils@npm:^6.7.1":
   version: 6.7.1
   resolution: "@libp2p/utils@npm:6.7.1"
   dependencies:
@@ -2623,14 +2623,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@multiformats/multiaddr-matcher@npm:^1.6.0, @multiformats/multiaddr-matcher@npm:^1.7.2":
-  version: 1.7.2
-  resolution: "@multiformats/multiaddr-matcher@npm:1.7.2"
+"@multiformats/multiaddr-matcher@npm:^2.0.0, @multiformats/multiaddr-matcher@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@multiformats/multiaddr-matcher@npm:2.0.1"
   dependencies:
-    "@chainsafe/is-ip": "npm:^2.0.1"
     "@multiformats/multiaddr": "npm:^12.0.0"
-    multiformats: "npm:^13.0.0"
-  checksum: 10c0/834df44e2897bdc4b6d3f2f827e707a9a944fd598f05aec2d6a0f3df4c72e3c53e96f3ffc57260096449471ed47ebe4a8d9304c77185f17ea552ee28994320ce
+  checksum: 10c0/e9232f76781d5b50287c3470e008da93f65ff77575bbac8b53bde78136fdbc52ee586968c6033b0dc9659630ea11d8fd28b25f452083145dc023b259e022be75
   languageName: node
   linkType: hard
 
@@ -4458,137 +4456,137 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-android-arm-eabi@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-android-arm-eabi@npm:1.10.1"
+"@unrs/resolver-binding-android-arm-eabi@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-android-arm-eabi@npm:1.11.0"
   conditions: os=android & cpu=arm
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-android-arm64@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-android-arm64@npm:1.10.1"
+"@unrs/resolver-binding-android-arm64@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-android-arm64@npm:1.11.0"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-darwin-arm64@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-darwin-arm64@npm:1.10.1"
+"@unrs/resolver-binding-darwin-arm64@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-darwin-arm64@npm:1.11.0"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-darwin-x64@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-darwin-x64@npm:1.10.1"
+"@unrs/resolver-binding-darwin-x64@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-darwin-x64@npm:1.11.0"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-freebsd-x64@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-freebsd-x64@npm:1.10.1"
+"@unrs/resolver-binding-freebsd-x64@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-freebsd-x64@npm:1.11.0"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-arm-gnueabihf@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-arm-gnueabihf@npm:1.10.1"
+"@unrs/resolver-binding-linux-arm-gnueabihf@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-arm-gnueabihf@npm:1.11.0"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-arm-musleabihf@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-arm-musleabihf@npm:1.10.1"
+"@unrs/resolver-binding-linux-arm-musleabihf@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-arm-musleabihf@npm:1.11.0"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-arm64-gnu@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-arm64-gnu@npm:1.10.1"
+"@unrs/resolver-binding-linux-arm64-gnu@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-arm64-gnu@npm:1.11.0"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-arm64-musl@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-arm64-musl@npm:1.10.1"
+"@unrs/resolver-binding-linux-arm64-musl@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-arm64-musl@npm:1.11.0"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-ppc64-gnu@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-ppc64-gnu@npm:1.10.1"
+"@unrs/resolver-binding-linux-ppc64-gnu@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-ppc64-gnu@npm:1.11.0"
   conditions: os=linux & cpu=ppc64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-riscv64-gnu@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-riscv64-gnu@npm:1.10.1"
+"@unrs/resolver-binding-linux-riscv64-gnu@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-riscv64-gnu@npm:1.11.0"
   conditions: os=linux & cpu=riscv64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-riscv64-musl@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-riscv64-musl@npm:1.10.1"
+"@unrs/resolver-binding-linux-riscv64-musl@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-riscv64-musl@npm:1.11.0"
   conditions: os=linux & cpu=riscv64 & libc=musl
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-s390x-gnu@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-s390x-gnu@npm:1.10.1"
+"@unrs/resolver-binding-linux-s390x-gnu@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-s390x-gnu@npm:1.11.0"
   conditions: os=linux & cpu=s390x & libc=glibc
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-x64-gnu@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-x64-gnu@npm:1.10.1"
+"@unrs/resolver-binding-linux-x64-gnu@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-x64-gnu@npm:1.11.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-linux-x64-musl@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-linux-x64-musl@npm:1.10.1"
+"@unrs/resolver-binding-linux-x64-musl@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-linux-x64-musl@npm:1.11.0"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-wasm32-wasi@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-wasm32-wasi@npm:1.10.1"
+"@unrs/resolver-binding-wasm32-wasi@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-wasm32-wasi@npm:1.11.0"
   dependencies:
     "@napi-rs/wasm-runtime": "npm:^0.2.11"
   conditions: cpu=wasm32
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-win32-arm64-msvc@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-win32-arm64-msvc@npm:1.10.1"
+"@unrs/resolver-binding-win32-arm64-msvc@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-win32-arm64-msvc@npm:1.11.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-win32-ia32-msvc@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-win32-ia32-msvc@npm:1.10.1"
+"@unrs/resolver-binding-win32-ia32-msvc@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-win32-ia32-msvc@npm:1.11.0"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@unrs/resolver-binding-win32-x64-msvc@npm:1.10.1":
-  version: 1.10.1
-  resolution: "@unrs/resolver-binding-win32-x64-msvc@npm:1.10.1"
+"@unrs/resolver-binding-win32-x64-msvc@npm:1.11.0":
+  version: 1.11.0
+  resolution: "@unrs/resolver-binding-win32-x64-msvc@npm:1.11.0"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -4718,8 +4716,8 @@ __metadata:
   linkType: hard
 
 "aegir@npm:^47.0.14, aegir@npm:^47.0.19":
-  version: 47.0.19
-  resolution: "aegir@npm:47.0.19"
+  version: 47.0.20
+  resolution: "aegir@npm:47.0.20"
   dependencies:
     "@electron/get": "npm:^4.0.0"
     "@polka/send-type": "npm:^0.5.2"
@@ -4816,7 +4814,7 @@ __metadata:
     yargs-parser: "npm:^21.1.1"
   bin:
     aegir: src/index.js
-  checksum: 10c0/9ce544e64eb01300a2b6d1382ac961f8c64e1e8d19cfc88ac002450a61eb2ef47e5a9cae39100607fcd1ccd810899d09ca56406baa5c40f18398c5c788f08a6b
+  checksum: 10c0/4317cd6e6a90a90c209b271067ba47d4ec67d06cb9bd8b1a8377d3d0ebec67ef53fe7682615faddc7a7b71d484f81cd4d31cd7e31af1efc6cd2a1bbd3d1fc18a
   languageName: node
   linkType: hard
 
@@ -5410,7 +5408,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.24.0, browserslist@npm:^4.25.0":
+"browserslist@npm:^4.24.0, browserslist@npm:^4.25.1":
   version: 4.25.1
   resolution: "browserslist@npm:4.25.1"
   dependencies:
@@ -5624,9 +5622,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001726":
-  version: 1.0.30001726
-  resolution: "caniuse-lite@npm:1.0.30001726"
-  checksum: 10c0/2c5f91da7fd9ebf8c6b432818b1498ea28aca8de22b30dafabe2a2a6da1e014f10e67e14f8e68e872a0867b6b4cd6001558dde04e3ab9770c9252ca5c8849d0e
+  version: 1.0.30001727
+  resolution: "caniuse-lite@npm:1.0.30001727"
+  checksum: 10c0/f0a441c05d8925d728c2d02ce23b001935f52183a3bf669556f302568fe258d1657940c7ac0b998f92bc41383e185b390279a7d779e6d96a2b47881f56400221
   languageName: node
   linkType: hard
 
@@ -6224,11 +6222,11 @@ __metadata:
   linkType: hard
 
 "core-js-compat@npm:^3.43.0":
-  version: 3.43.0
-  resolution: "core-js-compat@npm:3.43.0"
+  version: 3.44.0
+  resolution: "core-js-compat@npm:3.44.0"
   dependencies:
-    browserslist: "npm:^4.25.0"
-  checksum: 10c0/923804c16faf91bacb747a697640a907cb2a3e63078d467a75eb7ea4187d62d36347a94e5826d1b36739012e81a2ea435922cc8bd8e228fa68efaf00a9ce94af
+    browserslist: "npm:^4.25.1"
+  checksum: 10c0/5de4b042b8bb232b8390be3079030de5c7354610f136ed3eb91310a44455a78df02cfcf49b2fd05d5a5aa2695460620abf1b400784715f7482ed4770d40a68b2
   languageName: node
   linkType: hard
 
@@ -6942,14 +6940,14 @@ __metadata:
   linkType: hard
 
 "emnapi@npm:^1.4.0":
-  version: 1.4.3
-  resolution: "emnapi@npm:1.4.3"
+  version: 1.4.4
+  resolution: "emnapi@npm:1.4.4"
   peerDependencies:
     node-addon-api: ">= 6.1.0"
   peerDependenciesMeta:
     node-addon-api:
       optional: true
-  checksum: 10c0/61516ec68c4fd9ece305f4598809bb0ff1f0622f3ef267e619a66a8debdbbe655da82a427e6bae308131cfc1680debf8460b98aaa20f9ed23f36e019f4f35b3e
+  checksum: 10c0/4f722f794a08d62ca1e84770084ce9b6e40cd06d028ed5350cc4eb6ed0294933a04aefc70fa3f36beed6f75fd77dcaeae8203ad73c5403f445e1587291ff1bd1
   languageName: node
   linkType: hard
 
@@ -10560,9 +10558,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libp2p@npm:^2.8.12":
-  version: 2.8.12
-  resolution: "libp2p@npm:2.8.12"
+"libp2p@npm:^2.8.14":
+  version: 2.8.14
+  resolution: "libp2p@npm:2.8.14"
   dependencies:
     "@chainsafe/is-ip": "npm:^2.1.0"
     "@chainsafe/netmask": "npm:^2.0.0"
@@ -10577,7 +10575,7 @@ __metadata:
     "@libp2p/utils": "npm:^6.7.1"
     "@multiformats/dns": "npm:^1.0.6"
     "@multiformats/multiaddr": "npm:^12.4.4"
-    "@multiformats/multiaddr-matcher": "npm:^1.7.2"
+    "@multiformats/multiaddr-matcher": "npm:^2.0.0"
     any-signal: "npm:^4.1.1"
     datastore-core: "npm:^10.0.2"
     interface-datastore: "npm:^8.3.1"
@@ -10592,7 +10590,7 @@ __metadata:
     race-event: "npm:^1.3.0"
     race-signal: "npm:^1.1.3"
     uint8arrays: "npm:^5.1.0"
-  checksum: 10c0/1da209065bd27842d7e8271a83ae0f828e7e214e2c19673f70c491d747bd9e049c0cb3a69d9e659e41620c666f9409ff8d66f889438d4f401897048fc847f669
+  checksum: 10c0/f85768c2028a936bf564e96ff5d9668e25906490aaa27b1e17a9d7d9e3a546b330b008b149e81187499d0d6f834a4150c4a9ac7204ec19b313fb1d1384e7246d
   languageName: node
   linkType: hard
 
@@ -15818,11 +15816,11 @@ __metadata:
   linkType: hard
 
 "typedoc-plugin-mdn-links@npm:^5.0.2":
-  version: 5.0.2
-  resolution: "typedoc-plugin-mdn-links@npm:5.0.2"
+  version: 5.0.3
+  resolution: "typedoc-plugin-mdn-links@npm:5.0.3"
   peerDependencies:
     typedoc: 0.27.x || 0.28.x
-  checksum: 10c0/423761f7bb6535de10c5de464c7fbfcbf4c387e17edf417f3afdc00bf85c384eb4a12e821e03bb9023af7be2cb0abc0062901d0918456890d65f4daa7f4e9362
+  checksum: 10c0/586f969818b985622a4d52c3dd6f980ef1c49fb214818d11a29ecb100fcf408fa1d31fbe10e1007a699854335d165112d5f42ba17c3d80c20eded6a3b5ce2792
   languageName: node
   linkType: hard
 
@@ -16128,28 +16126,28 @@ __metadata:
   linkType: hard
 
 "unrs-resolver@npm:^1.6.2, unrs-resolver@npm:^1.9.2":
-  version: 1.10.1
-  resolution: "unrs-resolver@npm:1.10.1"
+  version: 1.11.0
+  resolution: "unrs-resolver@npm:1.11.0"
   dependencies:
-    "@unrs/resolver-binding-android-arm-eabi": "npm:1.10.1"
-    "@unrs/resolver-binding-android-arm64": "npm:1.10.1"
-    "@unrs/resolver-binding-darwin-arm64": "npm:1.10.1"
-    "@unrs/resolver-binding-darwin-x64": "npm:1.10.1"
-    "@unrs/resolver-binding-freebsd-x64": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-arm-gnueabihf": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-arm-musleabihf": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-arm64-gnu": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-arm64-musl": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-ppc64-gnu": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-riscv64-gnu": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-riscv64-musl": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-s390x-gnu": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-x64-gnu": "npm:1.10.1"
-    "@unrs/resolver-binding-linux-x64-musl": "npm:1.10.1"
-    "@unrs/resolver-binding-wasm32-wasi": "npm:1.10.1"
-    "@unrs/resolver-binding-win32-arm64-msvc": "npm:1.10.1"
-    "@unrs/resolver-binding-win32-ia32-msvc": "npm:1.10.1"
-    "@unrs/resolver-binding-win32-x64-msvc": "npm:1.10.1"
+    "@unrs/resolver-binding-android-arm-eabi": "npm:1.11.0"
+    "@unrs/resolver-binding-android-arm64": "npm:1.11.0"
+    "@unrs/resolver-binding-darwin-arm64": "npm:1.11.0"
+    "@unrs/resolver-binding-darwin-x64": "npm:1.11.0"
+    "@unrs/resolver-binding-freebsd-x64": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-arm-gnueabihf": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-arm-musleabihf": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-arm64-gnu": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-arm64-musl": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-ppc64-gnu": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-riscv64-gnu": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-riscv64-musl": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-s390x-gnu": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-x64-gnu": "npm:1.11.0"
+    "@unrs/resolver-binding-linux-x64-musl": "npm:1.11.0"
+    "@unrs/resolver-binding-wasm32-wasi": "npm:1.11.0"
+    "@unrs/resolver-binding-win32-arm64-msvc": "npm:1.11.0"
+    "@unrs/resolver-binding-win32-ia32-msvc": "npm:1.11.0"
+    "@unrs/resolver-binding-win32-x64-msvc": "npm:1.11.0"
     napi-postinstall: "npm:^0.3.0"
   dependenciesMeta:
     "@unrs/resolver-binding-android-arm-eabi":
@@ -16190,7 +16188,7 @@ __metadata:
       optional: true
     "@unrs/resolver-binding-win32-x64-msvc":
       optional: true
-  checksum: 10c0/11e6c26faf4c0b8f7e2d3530862c717041044913b572a8668e48ddee90a4f7e6ec25508d8bf7620d30e7124ac7f3446392b68b1d8c6d330f3a24e56602ffbbf1
+  checksum: 10c0/5883c0621e3a57f21426092a99783ecd88e795493a0ab013a10013ddd8fe355d67a88ac37a7e8ae0f3617d52e7f688b95d9b2807ac605b22c174a8bd6d85fc04
   languageName: node
   linkType: hard
 
