@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.1...v1.1.2) (2025-07-07)
+
+
+### Bug Fixes
+
+* do not throw unimplemented error ([#30](https://github.com/ChainSafe/js-libp2p-quic/issues/30)) ([b730d02](https://github.com/ChainSafe/js-libp2p-quic/commit/b730d02c456568e2f6d93f5a441ee86b68f2ae12)), closes [#27](https://github.com/ChainSafe/js-libp2p-quic/issues/27)
+* listen on multiple wildcards ([#32](https://github.com/ChainSafe/js-libp2p-quic/issues/32)) ([9a22a8f](https://github.com/ChainSafe/js-libp2p-quic/commit/9a22a8f581c51c702126b05c1389cd5ec3ee602d))
+
 ## [1.1.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.0...v1.1.1) (2025-04-05)
 
 
