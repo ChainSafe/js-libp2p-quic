@@ -1,5 +1,5 @@
 import { setMaxListeners, TypedEventEmitter } from '@libp2p/interface'
-import { fromStringTuples } from '@multiformats/multiaddr'
+import { multiaddr } from '@multiformats/multiaddr'
 import { QuicConnection } from './connection.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
@@ -86,28 +86,28 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     return []
   }
 
-  async listen (multiaddr: Multiaddr): Promise<void> {
-    const addr = multiaddr.nodeAddress()
+  async listen (ma: Multiaddr): Promise<void> {
+    const addr = ma.nodeAddress()
     const controller = new AbortController()
     const listener = new napi.Server(this.#config, addr.address, addr.port)
 
     // replace wildcard port with actual listening port
     if (addr.port === 0) {
-      const stringTuples = multiaddr.stringTuples()
+      const components = ma.getComponents()
 
-      for (const stringTuple of stringTuples) {
-        if (stringTuple[0] === 0x0111) {
-          stringTuple[1] = `${listener.port()}`
+      for (const component of components) {
+        if (component.name === 'udp') {
+          component.value = `${listener.port()}`
         }
       }
 
-      multiaddr = fromStringTuples(stringTuples)
+      ma = multiaddr(components)
     }
 
     this.state = {
       status: 'listening',
       listener,
-      listenAddr: multiaddr,
+      listenAddr: ma,
       controller,
       connections: new Set()
     }

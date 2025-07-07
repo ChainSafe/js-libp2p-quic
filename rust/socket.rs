@@ -23,12 +23,22 @@ use std::{
 use quinn::udp;
 use quinn::{AsyncUdpSocket, UdpPoller};
 use tokio::{io::Interest, sync::RwLock};
-use socket2::Socket;
+use socket2::{Socket, Domain, Type};
 
 use crate::config;
 
 pub fn create_socket(config: config::SocketConfig, socket_addr: std::net::SocketAddr) -> napi::Result<std::net::UdpSocket> {
-    let socket = std::net::UdpSocket::bind(socket_addr)?;
+    let socket;
+
+    // Create a TCP listener bound to two addresses.
+    if socket_addr.is_ipv6() {
+      socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
+      socket.set_only_v6(true)?;
+    } else {
+      socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
+    }
+
+    socket.bind(&socket_addr.into())?;
 
     let socket = Socket::from(socket);
     socket.set_send_buffer_size(config.send_buffer_size as usize).unwrap();

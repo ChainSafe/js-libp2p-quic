@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 
+import { isIPv4, isIPv6 } from '@chainsafe/is-ip'
 import { generateKeyPair } from '@libp2p/crypto/keys'
 import { defaultLogger } from '@libp2p/logger'
 import { multiaddr } from '@multiformats/multiaddr'
@@ -14,14 +15,17 @@ import type { Multiaddr } from '@multiformats/multiaddr'
 
 describe('Quic Transport', () => {
   let components: QuicComponents
-  let listener: Listener
+  let listeners: Listener[]
 
   beforeEach(async () => {
+    listeners = []
     components = await createComponents()
   })
 
   afterEach(async () => {
-    await listener?.close()
+    await Promise.all(
+      listeners.map(l => l.close())
+    )
   })
 
   it('transport filter filters out invalid dial multiaddrs', async () => {
@@ -48,9 +52,10 @@ describe('Quic Transport', () => {
     }
 
     const transport = quic()(components)
-    listener = transport.createListener({
+    const listener = transport.createListener({
       upgrader: stubInterface<Upgrader>()
     })
+    listeners.push(listener)
 
     await Promise.all([
       pEvent(listener, 'listening'),
@@ -88,5 +93,91 @@ describe('Quic Transport', () => {
 
   it('supports listening on specific ipv6 addresses', async () => {
     await testListenAddresses(multiaddr('/ip6/::1/udp/0/quic-v1'), false)
+  })
+
+  it('supports listening on multiple wildcards', async () => {
+    const components = {
+      logger: defaultLogger(),
+      privateKey: await generateKeyPair('Ed25519')
+    }
+
+    const transport = quic()(components)
+    const ip4Listener = transport.createListener({
+      upgrader: stubInterface<Upgrader>()
+    })
+    listeners.push(ip4Listener)
+    const ip6Listener = transport.createListener({
+      upgrader: stubInterface<Upgrader>()
+    })
+    listeners.push(ip6Listener)
+
+    await Promise.all([
+      pEvent(ip4Listener, 'listening'),
+      ip4Listener.listen(multiaddr('/ip4/0.0.0.0/udp/0/quic-v1')),
+      pEvent(ip6Listener, 'listening'),
+      ip6Listener.listen(multiaddr('/ip6/::/udp/0/quic-v1'))
+    ])
+
+    const addrs = [
+      ...ip4Listener.getAddrs(),
+      ...ip6Listener.getAddrs()
+    ]
+
+    let hadIp4 = false
+    let hadIp6 = false
+
+    for (const addr of addrs) {
+      const { host, port } = addr.toOptions()
+      expect(port).to.be.greaterThan(0, 'did not translate wildcard port')
+
+      if (isIPv4(host)) {
+        hadIp4 = true
+        expect(host).to.not.equal('0.0.0.0', 'did not translate wildcard host')
+      } else if (isIPv6(host)) {
+        hadIp6 = true
+        expect(host).to.not.equal('::', 'did not translate wildcard host')
+      } else {
+        throw new Error(`Host "${host}" was neither IPv4 nor IPv6`)
+      }
+    }
+
+    expect(hadIp4).to.be.true('did not listen on IPv4 addresses')
+    expect(hadIp6).to.be.true('did not listen on IPv6 addresses')
+  })
+
+  it('supports listening the same port for different families', async () => {
+    const components = {
+      logger: defaultLogger(),
+      privateKey: await generateKeyPair('Ed25519')
+    }
+
+    const transport = quic()(components)
+    const ip4Listener = transport.createListener({
+      upgrader: stubInterface<Upgrader>()
+    })
+    listeners.push(ip4Listener)
+    const ip6Listener = transport.createListener({
+      upgrader: stubInterface<Upgrader>()
+    })
+    listeners.push(ip6Listener)
+
+    await Promise.all([
+      pEvent(ip4Listener, 'listening'),
+      ip4Listener.listen(multiaddr('/ip4/127.0.0.1/udp/14000/quic-v1')),
+      pEvent(ip6Listener, 'listening'),
+      ip6Listener.listen(multiaddr('/ip6/::1/udp/14000/quic-v1'))
+    ])
+
+    const addrs = [
+      ...ip4Listener.getAddrs(),
+      ...ip6Listener.getAddrs()
+    ]
+
+    expect(addrs).to.have.lengthOf(2, 'did not listen on correct amount of addresses')
+
+    for (const addr of addrs) {
+      const { port } = addr.toOptions()
+      expect(port).to.equal(14000, 'did not listen on port')
+    }
   })
 })
