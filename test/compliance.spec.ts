@@ -1,6 +1,7 @@
 import transportCompliance from '@libp2p/interface-compliance-tests/transport'
 import { QUICV1 } from '@multiformats/multiaddr-matcher'
 import { quic } from '../src/index.js'
+import { hostSupportsIpv6 } from './util.ts'
 
 describe('Interface compliance tests (IPv4)', () => {
   transportCompliance({
@@ -34,6 +35,11 @@ describe('Interface compliance tests (IPv4)', () => {
 })
 
 describe('Interface compliance tests (IPv6)', function () {
+  if (!hostSupportsIpv6()) {
+    it.skip('Host does not support IPv6', () => {})
+    return
+  }
+
   transportCompliance({
     async setup () {
       const dialer = {
