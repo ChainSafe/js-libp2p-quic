@@ -1,4 +1,4 @@
-import { QUICV1 } from '@multiformats/multiaddr-matcher'
+import { QUIC_V1 } from '@multiformats/multiaddr-matcher'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 // p2p multi-address code
@@ -8,7 +8,7 @@ export const CODE_UNIX = 400
 
 export function listenFilter (multiaddrs: Multiaddr[]): Multiaddr[] {
   return multiaddrs.filter((ma) => {
-    return QUICV1.exactMatch(ma)
+    return QUIC_V1.exactMatch(ma)
   })
 }
 
