@@ -11,7 +11,8 @@ import type { Connection, CounterGroup, Listener, Logger, MultiaddrFilter, Trans
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 interface QuicTransportMetrics {
-  events: CounterGroup
+  events?: CounterGroup
+  errors?: CounterGroup
 }
 
 export class QuicTransport implements Transport {
@@ -23,7 +24,7 @@ export class QuicTransport implements Transport {
 
   readonly log: Logger
   readonly components: QuicComponents
-  readonly metrics?: QuicTransportMetrics
+  readonly metrics: QuicTransportMetrics
 
   readonly #config: napi.QuinnConfig
 
@@ -48,13 +49,15 @@ export class QuicTransport implements Transport {
       ip6: new napi.Client(this.#config, 1)
     }
 
-    if (this.components.metrics != null) {
-      this.metrics = {
-        events: this.components.metrics?.registerCounterGroup('libp2p_quic_dialer_events_total', {
-          label: 'event',
-          help: 'Total count of QUIC dialer events by type'
-        })
-      }
+    this.metrics = {
+      events: this.components.metrics?.registerCounterGroup('libp2p_quic_dialer_events_total', {
+        label: 'event',
+        help: 'Total count of QUIC dialer events by type'
+      }),
+      errors: this.components.metrics?.registerCounterGroup('libp2p_quic_dialer_errors_total', {
+        label: 'event',
+        help: 'Total count of QUIC dialer errors by type'
+      })
     }
 
     this.listenFilter = listenFilter
@@ -74,25 +77,41 @@ export class QuicTransport implements Transport {
 
     const dialPromise = dialer.outboundConnection(addr.address, addr.port)
     dialPromise
-      .then(() => this.metrics?.events.increment({ connect: true }))
-      .catch(() => this.metrics?.events.increment({ error: true }))
+      .then(() => this.metrics.events?.increment({ connect: true }))
+      .catch(() => this.metrics.events?.increment({ error: true }))
     const connection = await dialPromise
 
-    const maConn = new QuicConnection({
-      connection,
-      logger: this.components.logger,
-      direction: 'outbound',
-      metrics: this.metrics?.events
-    })
-    return options.upgrader.upgradeOutbound(maConn, {
-      skipEncryption: true,
-      skipProtection: true,
-      muxerFactory: new QuicStreamMuxerFactory({
+    let maConn: QuicConnection
+
+    try {
+      maConn = new QuicConnection({
         connection,
-        logger: this.components.logger
-      }),
-      signal: options.signal
-    })
+        logger: this.components.logger,
+        direction: 'outbound',
+        metrics: this.metrics?.events
+      })
+    } catch (err) {
+      this.metrics.errors?.increment({ outbound_to_connection: true })
+      throw err
+    }
+
+    try {
+      this.log('new outbound connection %a', maConn.remoteAddr)
+      return await options.upgrader.upgradeOutbound(maConn, {
+        skipEncryption: true,
+        skipProtection: true,
+        muxerFactory: new QuicStreamMuxerFactory({
+          connection,
+          logger: this.components.logger
+        }),
+        signal: options.signal
+      })
+    } catch (err: any) {
+      this.metrics.errors?.increment({ outbound_upgrade: true })
+      this.log.error('error upgrading outbound connection - %e', err)
+      maConn.abort(err)
+      throw err
+    }
   }
 
   createListener (options: QuicCreateListenerOptions): Listener {
