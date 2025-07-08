@@ -2,8 +2,7 @@ import { generateKeyPair, privateKeyToProtobuf } from '@libp2p/crypto/keys'
 import { defaultOptions } from '../src/index.js'
 import * as napi from '../src/napi.js'
 
-// skipped because this causes panics
-describe.skip('Sanity', () => {
+describe('Sanity', () => {
   it('create a bunch of connections and streams', async function () {
     this.timeout(60_000 * 5)
 
