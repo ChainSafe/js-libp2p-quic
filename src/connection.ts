@@ -11,6 +11,7 @@ interface QuicConnectionInit {
   logger: ComponentLogger
   direction: Direction
   metrics?: CounterGroup
+  metricsPrefix?: string
 }
 
 interface QuicConnectionEvents {
@@ -23,6 +24,9 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
   readonly log: Logger
   readonly remoteAddr: Multiaddr
   readonly metrics?: CounterGroup
+  readonly metricsPrefix: string
+
+  private remoteClosed?: boolean
 
   timeline: MultiaddrConnectionTimeline = {
     open: Date.now()
@@ -38,9 +42,12 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
     this.log = init.logger.forComponent(`libp2p:quic:connection:${this.#connection.id()}:${init.direction}`)
     this.remoteAddr = multiaddr(this.#connection.remoteMultiaddr())
     this.metrics = init.metrics
+    this.metricsPrefix = init.metricsPrefix ?? ''
 
     // close maconn when connection is closed by remote
     this.#connection.closed().then(() => {
+      this.remoteClosed = true
+      this.metrics?.increment({ [`${this.metricsPrefix}end`]: true })
       this.close()
         .catch(err => {
           this.abort(err)
@@ -59,7 +66,11 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
 
     this.timeline.close = Date.now()
     this.log('closed')
-    this.metrics?.increment({ close: true })
+
+    if (this.remoteClosed !== true) {
+      this.metrics?.increment({ [`${this.metricsPrefix}close`]: true })
+    }
+
     this.safeDispatchEvent('close')
   }
 
@@ -72,7 +83,7 @@ export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> impl
 
     this.timeline.close = Date.now()
     this.log('aborted - %e', err)
-    this.metrics?.increment({ abort: true })
+    this.metrics?.increment({ [`${this.metricsPrefix}abort`]: true })
     this.safeDispatchEvent('close')
   }
 }
