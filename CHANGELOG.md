@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.2...v1.1.3) (2025-07-08)
+
+
+### Bug Fixes
+
+* add error metrics ([#39](https://github.com/ChainSafe/js-libp2p-quic/issues/39)) ([ee6dfe5](https://github.com/ChainSafe/js-libp2p-quic/commit/ee6dfe5734994f5389e482dee9eaabfa9d985ba4))
+* race signal instead of setting up listeners ([#36](https://github.com/ChainSafe/js-libp2p-quic/issues/36)) ([ffb35af](https://github.com/ChainSafe/js-libp2p-quic/commit/ffb35af4d2f80f57c714b891c521445bbae0da9d))
+
 ## [1.1.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.1...v1.1.2) (2025-07-07)
 
 
