@@ -52,14 +52,13 @@ export class QuicStream extends AbstractStream {
     try {
       while (true) {
         this.log.trace('reading')
-        const chunk = Buffer.allocUnsafe(CHUNK_SIZE)
-        const length = await this.#stream.read4(chunk)
+        const chunk = await this.#stream.read2()
 
-        if (length == null) {
+        if (chunk == null) {
           break
         }
 
-        this.sourcePush(new Uint8ArrayList(chunk.subarray(0, length)))
+        this.sourcePush(new Uint8ArrayList(chunk))
 
         this.log.trace('read %d bytes', length)
       }
