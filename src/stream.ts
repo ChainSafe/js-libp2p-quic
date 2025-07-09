@@ -60,7 +60,7 @@ export class QuicStream extends AbstractStream {
 
         this.sourcePush(new Uint8ArrayList(chunk))
 
-        this.log.trace('read %d bytes', length)
+        this.log.trace('read %d bytes', chunk.length)
       }
     } catch (err: any) {
       this.log.error('source error - %e', err)
