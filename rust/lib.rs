@@ -7,6 +7,7 @@ use std::{
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use tokio::sync::Mutex;
+use socket2::{Socket, Domain, Type};
 
 mod config;
 mod socket;
@@ -30,10 +31,20 @@ impl Server {
   pub fn new(config: &config::QuinnConfig, ip: String, port: u16) -> Result<Self> {
     let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
     let socket_addr = SocketAddr::new(ip_addr, port);
-    let socket = socket::create_socket(config.socket_config, socket_addr)?;
+    let socket;
 
-    let socket = block_on(async move{
-      socket::UdpSocket::wrap_udp_socket(socket)
+    // Create a TCP listener bound to two addresses.
+    if ip_addr.is_ipv6() {
+      socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
+      socket.set_only_v6(true)?;
+    } else {
+      socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
+    }
+
+    socket.bind(&socket_addr.into())?;
+
+    let socket: Arc<socket::UdpSocket> = block_on(async move{
+      socket::UdpSocket::wrap_udp_socket(socket.into())
     })?;
     let endpoint = block_on(async {
       quinn::Endpoint::new_with_abstract_socket(

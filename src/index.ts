@@ -28,8 +28,8 @@
  */
 
 import { QuicTransport } from './transport.js'
-import type { ComponentLogger, DialTransportOptions, Metrics, PrivateKey, Transport } from '@libp2p/interface'
 import type * as napi from './napi.js'
+import type { ComponentLogger, DialTransportOptions, Metrics, PrivateKey, Transport } from '@libp2p/interface'
 
 export type QuicOptions = Omit<napi.Config, 'privateKeyProto'>
 
@@ -53,5 +53,5 @@ export const defaultOptions: QuicOptions = {
   maxStreamData: 10_000_000,
   maxConnectionData: 15_000_000,
   receiveBufferSize: 500_000,
-  sendBufferSize: 500_000,
+  sendBufferSize: 500_000
 }

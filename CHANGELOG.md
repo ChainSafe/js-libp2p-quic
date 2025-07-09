@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.3](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.2...v1.1.3) (2025-07-08)
+
+
+### Bug Fixes
+
+* add error metrics ([#39](https://github.com/ChainSafe/js-libp2p-quic/issues/39)) ([ee6dfe5](https://github.com/ChainSafe/js-libp2p-quic/commit/ee6dfe5734994f5389e482dee9eaabfa9d985ba4))
+* race signal instead of setting up listeners ([#36](https://github.com/ChainSafe/js-libp2p-quic/issues/36)) ([ffb35af](https://github.com/ChainSafe/js-libp2p-quic/commit/ffb35af4d2f80f57c714b891c521445bbae0da9d))
+
+## [1.1.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.1...v1.1.2) (2025-07-07)
+
+
+### Bug Fixes
+
+* do not throw unimplemented error ([#30](https://github.com/ChainSafe/js-libp2p-quic/issues/30)) ([b730d02](https://github.com/ChainSafe/js-libp2p-quic/commit/b730d02c456568e2f6d93f5a441ee86b68f2ae12)), closes [#27](https://github.com/ChainSafe/js-libp2p-quic/issues/27)
+* listen on multiple wildcards ([#32](https://github.com/ChainSafe/js-libp2p-quic/issues/32)) ([9a22a8f](https://github.com/ChainSafe/js-libp2p-quic/commit/9a22a8f581c51c702126b05c1389cd5ec3ee602d))
+
 ## [1.1.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.0...v1.1.1) (2025-04-05)
 
 

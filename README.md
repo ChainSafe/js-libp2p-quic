@@ -1,7 +1,7 @@
 # @chainsafe/libp2p-quic
 
 [![libp2p.io](https://img.shields.io/badge/project-libp2p-yellow.svg?style=flat-square)](http://libp2p.io/)
-[![CI](https://img.shields.io/github/actions/workflow/status/chainsafe/js-libp2p-quic/main.yml?branch=main\&style=flat-square)](https://github.com/chainsafe/js-libp2p-quic/actions/workflows/main.yml?query=branch%3Amain)
+[![CI](https://img.shields.io/github/actions/workflow/status/chainsafe/js-libp2p-quic/CI.yml?branch=main\&style=flat-square)](https://github.com/chainsafe/js-libp2p-quic/actions/workflows/CI.yml?query=branch%3Amain)
 
 > A QUIC transport for libp2p
 

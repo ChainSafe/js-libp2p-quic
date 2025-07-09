@@ -1,8 +1,9 @@
-import { type Uint8ArrayList } from 'uint8arraylist'
+import { raceSignal } from 'race-signal'
 import { QuicStream } from './stream.js'
 import type * as napi from './napi.js'
 import type { AbortOptions, ComponentLogger, Logger, Stream, StreamMuxer, StreamMuxerFactory, StreamMuxerInit } from '@libp2p/interface'
 import type { Sink } from 'it-stream-types'
+import type { Uint8ArrayList } from 'uint8arraylist'
 
 interface QuicStreamMuxerFactoryInit {
   connection: napi.Connection
@@ -59,24 +60,20 @@ class QuicStreamMuxer implements StreamMuxer {
   }
 
   async awaitInboundStreams (): Promise<void> {
-    const aborted = new Promise((resolve) => {
-      this.controller.signal.addEventListener('abort', () => { resolve(undefined) }, { once: true })
-    })
     while (true) {
-      const stream = await Promise.race([
-        aborted,
-        this.#connection.inboundStream()
-      ]) as napi.Stream | undefined
-      if (stream == null) {
-        break
-      }
-
       try {
+        const stream = await raceSignal(this.#connection.inboundStream(), this.controller.signal)
+
         this.onInboundStream(stream)
       } catch (e) {
-        this.log.error('%s error accepting stream', this.id, e)
+        this.log.error('%s error accepting stream - %e', this.id, e)
+
+        if (this.controller.signal.aborted) {
+          break
+        }
       }
     }
+
     this.log('%s no longer awaiting inbound streams', this.id)
   }
 
@@ -101,6 +98,7 @@ class QuicStreamMuxer implements StreamMuxer {
 
   async newStream (name?: string): Promise<Stream> {
     const str = await this.#connection.outboundStream()
+    this.controller.signal.throwIfAborted()
     const stream = new QuicStream({
       id: str.id(),
       stream: str,

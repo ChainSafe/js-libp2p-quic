@@ -1,5 +1,5 @@
 import transportCompliance from '@libp2p/interface-compliance-tests/transport'
-import { QUICV1 } from '@multiformats/multiaddr-matcher'
+import { QUIC_V1 } from '@multiformats/multiaddr-matcher'
 import { quic } from '../src/index.js'
 
 describe('Interface compliance tests (IPv4)', () => {
@@ -25,8 +25,8 @@ describe('Interface compliance tests (IPv4)', () => {
           },
           ...dialer
         },
-        dialMultiaddrMatcher: QUICV1,
-        listenMultiaddrMatcher: QUICV1
+        dialMultiaddrMatcher: QUIC_V1,
+        listenMultiaddrMatcher: QUIC_V1
       }
     },
     async teardown () {}
@@ -58,8 +58,8 @@ if (!process.env.CI) {
             },
             ...dialer
           },
-          dialMultiaddrMatcher: QUICV1,
-          listenMultiaddrMatcher: QUICV1
+          dialMultiaddrMatcher: QUIC_V1,
+          listenMultiaddrMatcher: QUIC_V1
         }
       },
       async teardown () {}
