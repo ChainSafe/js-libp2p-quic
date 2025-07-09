@@ -64,6 +64,7 @@
     "test:node": "aegir test -t node --cov",
     "test:electron-main": "aegir test -t electron-main",
     "universal": "napi universal",
+    "napi": "napi",
     "version": "napi version"
   },
   "dependencies": {
