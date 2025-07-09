@@ -29,7 +29,8 @@ export class QuicStream extends AbstractStream {
 
   async sendData (buf: Uint8ArrayList, options?: AbortOptions): Promise<void> {
     this.log.trace('writing %d bytes', buf.byteLength)
-    await this.#stream.write(buf.subarray())
+    const subarray = buf.subarray();
+    await this.#stream.write2(Buffer.from(subarray.buffer, subarray.byteOffset, subarray.byteLength))
     this.log.trace('wrote %d bytes', buf.byteLength)
   }
 
