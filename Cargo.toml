@@ -8,23 +8,23 @@ crate-type = ["cdylib"]
 path = "rust/lib.rs"
 
 [dependencies]
-libp2p-identity = { version = "0.2.10", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
-libp2p-tls = "0.6.0"
+libp2p-identity = { version = "0.2.12", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
+libp2p-tls = "0.6.2"
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "3.0.0-alpha.28", default-features = false, features = ["napi9", "async", "tokio_rt"] }
-napi-derive = "3.0.0-alpha.26"
-oneshot = "0.1.10"
+napi = { version = "3.0.0", default-features = false, features = ["napi9", "async", "tokio_rt"] }
+napi-derive = "3.0.0"
+oneshot = "0.1.11"
 pin-project-lite = "0.2.16"
-quinn = "0.11.6"
-ring = "0.17.9"
-rustls = { version = "0.23.23", features = ["ring"] }
-tokio = { version = "1.43.0", features = ["full"] }
+quinn = "0.11.8"
+ring = "0.17.14"
+rustls = { version = "0.23.29", features = ["ring"] }
+tokio = { version = "1.46.1", features = ["full"] }
 # included to satisfy napi dependencies
-ctor = "0.3.6"
-socket2 = "0.5.8"
+ctor = "0.4.2"
+socket2 = "0.6.0"
 
 [build-dependencies]
-napi-build = "2.1.4"
+napi-build = "2.2.2"
 
 [profile.release]
 lto = true
