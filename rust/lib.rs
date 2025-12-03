@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 
 use std::{
-  net::{IpAddr, SocketAddr}, sync::Arc, vec
+  net::{IpAddr, SocketAddr}, sync::Arc
 };
 
 use napi::bindgen_prelude::*;
@@ -230,8 +230,6 @@ impl Connection {
 pub struct Stream {
   send: Arc<Mutex<quinn::SendStream>>,
   recv: Arc<Mutex<quinn::RecvStream>>,
-  // send: Arc<quinn::SendStream>,
-  // recv: Arc<quinn::RecvStream>,
 }
 
 #[napi]
@@ -256,141 +254,9 @@ impl Stream {
   }
 
   #[napi]
-  pub async unsafe fn read2(&mut self) -> Result<Option<Uint8Array>> {
-    let mut buf = vec![0u8; 1024];
-    let chunk = self.recv.lock().await.read(buf.as_mut()).await.map_err(to_err)?;
-    match chunk {
-      Some(len) => {
-        buf.truncate(len as usize);
-        Ok(Some(Uint8Array::new(buf)),)
-      },
-      None => Ok(None),
-    }
-  }
-
-  // #[napi(ts_return_type = "Promise<number | undefined>")]
-  // pub fn read3(&mut self, env: Env, data: Buffer) -> Result<JsObject> {
-  //   // let data = data.into_ref()?;
-  //   let recv = self.recv.clone();
-
-  //   env.execute_tokio_future(async move {
-  //     // unsafe, but we know the data is not going to be modified by JS
-  //     let d = data.as_ref();
-  //     let data_mut = unsafe {
-  //       let ptr = d.as_ptr() as *mut u8;
-  //       std::slice::from_raw_parts_mut(ptr, d.len())
-  //     };
-  //     let mut recv = recv.lock().await;
-  //     let chunk = recv.read(
-  //       data_mut
-  //     ).await.map_err(to_err)?;
-  //     match chunk {
-  //       Some(len) => Ok((Some(len as u32), data)),
-  //       None => Ok((None, data)),
-  //     }
-  //   }, move |env, output| {
-  //     let (output, mut data) = output;
-
-  //     println!("{:?}", data.unref(*env)?);
-  //     if let Some(output) = output {
-  //       env.create_uint32(output).and_then(|n| Ok(n.into_unknown()))
-  //     } else {
-  //       env.get_undefined().and_then(|u| Ok(u.into_unknown()))
-  //     }
-  //   })
-  // }
-
-  // #[napi(ts_return_type = "Promise<number | undefined>")]
-  // pub fn read4(&mut self, data: JsBuffer) -> AsyncTask<Read> {
-  //   let data = data.into_ref().unwrap();
-  //   AsyncTask::new(Read {
-  //     buf: data,
-  //     recv: self.recv.clone(),
-  //   })
-  // }
-
-  // #[napi(ts_return_type = "Promise<number | undefined>")]
-  // pub fn read5(&mut self, env: Env, data: JsBuffer) -> Result<JsObject> {
-  //   let data = data.into_value()?;
-  //   let recv = self.recv.clone();
-
-  //   // unsafe, but we know the data is not going to be modified by JS
-  //   let data_mut = unsafe {
-  //     let ptr = data.as_ptr() as *mut u8;
-  //     std::slice::from_raw_parts_mut(ptr, data.len())
-  //   };
-  //   env.execute_tokio_future(async move {
-  //     let mut recv = recv.lock().await;
-  //     let chunk = recv.read(
-  //       data_mut
-  //     ).await.map_err(to_err)?;
-  //     match chunk {
-  //       Some(len) => Ok(Some(len as u32)),
-  //       None => Ok(None),
-  //     }
-  //   }, move |env, output| {
-  //     if let Some(output) = output {
-  //       env.create_uint32(output).and_then(|n| Ok(n.into_unknown()))
-  //     } else {
-  //       env.get_undefined().and_then(|u| Ok(u.into_unknown()))
-  //     }
-  //   })
-  // }
-
-  #[napi]
   pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
     self.send.lock().await.write_all(&data).await.map_err(to_err)
   }
-
-  // #[napi]
-  // pub fn write2(&mut self, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<AsyncTask<Write>> {
-  //   let data = data.into_value()?;
-  //   let byte_offset = data.byte_offset;
-  //   let length = data.length;
-  //   let data = data.arraybuffer.into_ref()?;
-  //   Ok(AsyncTask::new(Write {
-  //     data,
-  //     byte_offset,
-  //     length,
-  //     send: self.send.clone(),
-  //   }))
-  // }
-
-  // #[napi(ts_return_type = "Promise<undefined>")]
-  // pub fn write3(&mut self, env: Env, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<JsObject> {
-  //   let data = data.into_value()?;
-  //   let byte_offset = data.byte_offset;
-  //   let length = data.length;
-  //   let data = data.arraybuffer.into_ref()?;
-  //   let send = self.send.clone();
-  //   env.execute_tokio_future(async move {
-  //     let mut send = send.lock().await;
-  //     let _ = send.write_all(&data[byte_offset..byte_offset+length]).await.map_err(to_err);
-  //     Ok(data)
-  //   }, |env, mut data| {
-  //     data.unref(*env)?;
-  //     env.get_undefined()
-  //   })
-  // }
-
-  // #[napi(ts_return_type = "Promise<undefined>")]
-  // pub fn write4(&mut self, env: Env, #[napi(ts_arg_type = "Uint8Array")] data: JsTypedArray) -> Result<JsObject> {
-  //   let data = data.into_value()?;
-  //   let byte_offset = data.byte_offset;
-  //   let length = data.length;
-  //   let data = data.arraybuffer.into_value()?;
-  //   let data_mut = unsafe {
-  //     let ptr = data.as_ptr() as *mut u8;
-  //     std::slice::from_raw_parts(ptr, data.len())
-  //   };
-  //   let send = self.send.clone();
-  //   env.execute_tokio_future(async move {
-  //     let mut send = send.lock().await;
-  //     send.write_all(&data_mut[byte_offset..byte_offset+length]).await.map_err(to_err)
-  //   }, |env, _| {
-  //     env.get_undefined()
-  //   })
-  // }
 
   #[napi]
   pub async unsafe fn finish_write(&mut self) {
@@ -411,72 +277,3 @@ impl Stream {
 fn to_err<T: ToString>(str: T) -> napi::Error {
   napi::Error::new(Status::Unknown, str)
 }
-
-// pub struct Write {
-//   data: Ref<JsArrayBufferValue>,
-//   byte_offset: usize,
-//   length: usize,
-//   send: Arc<Mutex<SendStream>>,
-// }
-
-// impl Task for Write {
-//   type Output = ();
-//   type JsValue = JsUndefined;
-
-//   fn compute(&mut self) -> Result<Self::Output> {
-//     block_on(async move {
-//       let mut send = self.send.lock().await;
-//       send.write_all(&self.data[self.byte_offset..self.byte_offset+self.length]).await.map_err(to_err)
-//     })
-//   }
-
-//   fn resolve(&mut self, env: Env, _output: Self::Output) -> Result<Self::JsValue> {
-//     env.get_undefined()
-//   }
-
-//   fn finally(&mut self, env: Env) -> Result<()> {
-//     self.data.unref(env)?;
-//     Ok(())
-//   }
-// }
-
-// pub struct Read {
-//   buf: Ref<JsBufferValue>,
-//   recv: Arc<Mutex<RecvStream>>,
-// }
-
-// impl Task for Read {
-//   type Output = Option<u32>;
-//   type JsValue = Either<JsNumber, JsUndefined>;
-
-//   fn compute(&mut self) -> Result<Self::Output> {
-//     block_on(async move {
-//       // unsafe, but we know the data is not going to be modified by JS
-//       let d = self.buf.as_ref();
-//       let data_mut = unsafe {
-//         let ptr = d.as_ptr() as *mut u8;
-//         std::slice::from_raw_parts_mut(ptr, d.len())
-//       };
-//       let chunk = self.recv.lock().await.read(data_mut).await.map_err(to_err)?;
-//       match chunk {
-//         Some(len) => Ok(Some(len as u32)),
-//         None => Ok(None),
-//       }
-//     })
-//   }
-
-//   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-//     if let Some(output) = output {
-//       env.create_uint32(output).map(Either::A)
-//     } else {
-//       env.get_undefined().map(Either::B)
-//     }
-//   }
-
-//   fn finally(&mut self, env: Env) -> Result<()> {
-//     self.buf.unref(env)?;
-//     Ok(())
-//   }
-// }
-
-// mod out;
