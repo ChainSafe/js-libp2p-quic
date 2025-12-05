@@ -149,7 +149,7 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: .
+          path: src
       - name: List packages
         run: ls -R .
         shell: bash
@@ -208,7 +208,7 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: bindings-${{ matrix.target }}
-          path: .
+          path: src
       - name: List packages
         run: ls -R .
         shell: bash
