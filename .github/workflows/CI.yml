@@ -40,21 +40,17 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             build: pnpm build:rs --platform --target aarch64-unknown-linux-musl -x
-    name: Build bindings for ${{ matrix.settings.target }} - node@22
+    name: Build - ${{ matrix.settings.target }} - node@22
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v5
-        with: 
-          submodules: 'recursive'  
-      - name: Install pnpm before setup node
-        shell: bash
-        run: npm install -g pnpm
+      - uses: actions/checkout@v6
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Setup Core pack 
-        run: corepack enable          
+          cache: pnpm
       - name: Install
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -74,7 +70,7 @@ jobs:
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
-          version: 0.14.1
+          version: 0.15.2
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
@@ -88,14 +84,29 @@ jobs:
         shell: bash
       - name: Install dependencies
         run: pnpm install
+      - name: Setup node x86
+        uses: actions/setup-node@v6
+        if: matrix.settings.target == 'i686-pc-windows-msvc'
+        with:
+          node-version: 22
+          cache: pnpm
+          architecture: x86
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
+        if: matrix.settings.target != 'wasm32-wasip1-threads'
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: "*.node"
+          path: '*.node'
+          if-no-files-found: error
+      - name: Upload artifact
+        uses: actions/upload-artifact@v5
+        if: matrix.settings.target == 'wasm32-wasip1-threads'
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: '*.wasm'
           if-no-files-found: error
 
   test-macOS-windows-binding:
