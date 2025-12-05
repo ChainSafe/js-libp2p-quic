@@ -91,9 +91,12 @@ jobs:
           node-version: 22
           cache: pnpm
           architecture: x86
-      - name: Build
+      - name: Build rs
         run: ${{ matrix.settings.build }}
         shell: bash
+      - name: Build ts
+        run: pnpm build:ts
+        shell: bash        
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         if: matrix.settings.target != 'wasm32-wasip1-threads'
