@@ -74,6 +74,8 @@
     "@libp2p/interface-compliance-tests": "^6.4.15",
     "@libp2p/logger": "^5.1.21",
     "@napi-rs/cli": "^3.5.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.1",
     "aegir": "^47.0.19",
     "p-event": "^6.0.1",
     "sinon-ts": "^2.0.0",
