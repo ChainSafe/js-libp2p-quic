@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.4...v1.1.5) (2025-12-11)
+
+
+### Bug Fixes
+
+* migrate `yarn` to `pnpm` ([#44](https://github.com/ChainSafe/js-libp2p-quic/issues/44)) ([7847f2e](https://github.com/ChainSafe/js-libp2p-quic/commit/7847f2e6e9b17881f156588290861cad2b47e603))
+
 ## [1.1.4](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.3...v1.1.4) (2025-12-05)
 
 
