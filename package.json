@@ -1,6 +1,6 @@
 {
   "name": "@chainsafe/libp2p-quic",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "A QUIC transport for libp2p",
   "license": "MIT",
   "type": "module",
