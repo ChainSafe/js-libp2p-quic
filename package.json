@@ -16,7 +16,6 @@
   },
   "napi": {
     "binaryName": "libp2p-quic",
-    "npmClient": "pnpm",
     "targets": [
       "aarch64-apple-darwin",
       "aarch64-unknown-linux-gnu",
@@ -29,6 +28,11 @@
   },
   "engines": {
     "node": ">= 20"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "provenance": true
   },
   "keywords": [
     "napi",
