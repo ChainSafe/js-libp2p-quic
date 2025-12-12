@@ -16,6 +16,7 @@
   },
   "napi": {
     "binaryName": "libp2p-quic",
+    "npmClient": "pnpm",
     "targets": [
       "aarch64-apple-darwin",
       "aarch64-unknown-linux-gnu",
@@ -48,7 +49,7 @@
     "dep-check": "aegir dep-check -P test -P src/napi.js",
     "docs": "aegir docs",
     "lint": "aegir lint",
-    "prepublishOnly": "napi prepublish -t npm",
+    "prepublishOnly": "napi prepublish -t npm --no-gh-release",
     "test": "aegir test -t node",
     "test:chrome": "aegir test -t browser -f ./dist/test/browser.js --cov",
     "test:chrome-webworker": "aegir test -t webworker -f ./dist/test/browser.js",
