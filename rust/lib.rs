@@ -73,7 +73,7 @@ impl Server {
   }
 
   #[napi]
-  pub async unsafe fn abort(&mut self) {
+  pub async fn abort(&self) {
     self.endpoint.close(0u8.into(), b"");
     self.endpoint.wait_idle().await;
     self.socket.unbind().await;
@@ -245,31 +245,35 @@ impl Stream {
   }
 
   #[napi]
-  pub async unsafe fn read(&mut self, mut buf: Uint8Array) -> Result<Option<u32>> {
-    let chunk = self.recv.lock().await.read(buf.as_mut()).await.map_err(to_err)?;
+  pub async fn read(&self, max_len: u32) -> Result<Option<Uint8Array>> {
+    let mut buf = vec![0u8; max_len as usize];
+    let chunk = self.recv.lock().await.read(&mut buf).await.map_err(to_err)?;
     match chunk {
-      Some(len) => Ok(Some(len as u32)),
+      Some(len) => {
+        buf.truncate(len);
+        Ok(Some(buf.into()))
+      },
       None => Ok(None),
     }
   }
 
   #[napi]
-  pub async unsafe fn write(&mut self, data: Uint8Array) -> Result<()> {
+  pub async fn write(&self, data: Uint8Array) -> Result<()> {
     self.send.lock().await.write_all(&data).await.map_err(to_err)
   }
 
   #[napi]
-  pub async unsafe fn finish_write(&mut self) {
+  pub async fn finish_write(&self) {
     let _ = self.send.lock().await.finish();
   }
 
   #[napi]
-  pub async unsafe fn reset_write(&mut self) {
+  pub async fn reset_write(&self) {
     let _ = self.send.lock().await.reset(0u8.into());
   }
 
   #[napi]
-  pub async unsafe fn stop_read(&mut self) {
+  pub async fn stop_read(&self) {
     let _ = self.recv.lock().await.stop(0u8.into());
   }
 }

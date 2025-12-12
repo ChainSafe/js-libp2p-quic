@@ -26,7 +26,7 @@ describe.skip('Sanity', () => {
     const connections = new Set<napi.Connection>()
     const streams = new Set<napi.Stream>()
     const dataIn = new Set<Buffer>()
-    const dataOut = new Set<Buffer>()
+    const dataOut = new Set<Uint8Array>()
 
     const log = (...args: unknown[]): void => {
       // console.log(...args)
@@ -42,12 +42,11 @@ describe.skip('Sanity', () => {
     const onInboundStream = async (stream: napi.Stream, connIx: number): Promise<void> => {
       streams.add(stream)
       for (let i = 0; i < nData; i++) {
-        const b = Buffer.allocUnsafe(4096)
-        const len = await stream.read(b)
-        if (len === null) {
+        const b = await stream.read(4096)
+        if (b === null) {
           break
         }
-        dataOut.add(b.subarray(0, len))
+        dataOut.add(b)
         log('read', connIx, i)
       }
     }
