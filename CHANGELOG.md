@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.8](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.7...v1.1.8) (2025-12-12)
+
+
+### Bug Fixes
+
+* remove unsafe rust code ([#51](https://github.com/ChainSafe/js-libp2p-quic/issues/51)) ([6267ce3](https://github.com/ChainSafe/js-libp2p-quic/commit/6267ce36ee19e7e4b3752b68411c7b95117a816b))
+
 ## [1.1.7](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.6...v1.1.7) (2025-12-12)
 
 
