@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.6...v1.1.7) (2025-12-12)
+
+
+### Bug Fixes
+
+* broken npm publish ([#48](https://github.com/ChainSafe/js-libp2p-quic/issues/48)) ([1758fcb](https://github.com/ChainSafe/js-libp2p-quic/commit/1758fcbbe418f531a5d7e9f3460bb3f30e35e803))
+
 ## [1.1.6](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.5...v1.1.6) (2025-12-12)
 
 
