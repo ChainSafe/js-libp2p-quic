@@ -257,9 +257,14 @@ impl Stream {
     }
   }
 
-  #[napi]
-  pub async fn write(&self, data: Uint8Array) -> Result<()> {
-    self.send.lock().await.write_all(&data).await.map_err(to_err)
+  #[napi(ts_return_type = "Promise<void>")]
+  pub async fn write(&self, data: Uint8Array) -> Result<Uint8Array> {
+    self.send.lock().await.write_all(&data).await.map_err(to_err)?;
+    // Return the Uint8Array so it is dropped on the JS thread (via the
+    // resolver callback) instead of on the Tokio worker thread.  Dropping
+    // on the Tokio thread goes through CUSTOM_GC_TSFN, which can race
+    // with V8's garbage collector and cause a use-after-free / segfault.
+    Ok(data)
   }
 
   #[napi]
