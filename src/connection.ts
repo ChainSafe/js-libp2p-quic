@@ -1,89 +1,61 @@
-import { TypedEventEmitter } from '@libp2p/interface'
+import { AbstractMultiaddrConnection } from '@libp2p/utils'
 import { multiaddr } from '@multiformats/multiaddr'
 import type * as napi from './napi.js'
-import type { AbortOptions, ComponentLogger, CounterGroup, Direction, Logger, MultiaddrConnection, MultiaddrConnectionTimeline } from '@libp2p/interface'
-import type { Multiaddr } from '@multiformats/multiaddr'
-import type { Sink } from 'it-stream-types'
+import type { AbortOptions, CounterGroup, Logger, MessageStreamDirection } from '@libp2p/interface'
+import type { SendResult } from '@libp2p/utils'
 import type { Uint8ArrayList } from 'uint8arraylist'
 
 interface QuicConnectionInit {
   connection: napi.Connection
-  logger: ComponentLogger
-  direction: Direction
+  log: Logger
+  direction: MessageStreamDirection
   metrics?: CounterGroup
   metricsPrefix?: string
 }
 
-interface QuicConnectionEvents {
-  close: CustomEvent
-}
-
-export class QuicConnection extends TypedEventEmitter<QuicConnectionEvents> implements MultiaddrConnection {
+export class QuicConnection extends AbstractMultiaddrConnection {
   readonly #connection: napi.Connection
 
-  readonly log: Logger
-  readonly remoteAddr: Multiaddr
-  readonly metrics?: CounterGroup
-  readonly metricsPrefix: string
-
-  private remoteClosed?: boolean
-
-  timeline: MultiaddrConnectionTimeline = {
-    open: Date.now()
-  }
-
-  source: AsyncGenerator<Uint8Array | Uint8ArrayList> = (async function * () {})()
-  sink: Sink<AsyncGenerator<Uint8Array | Uint8ArrayList>> = async function * () {}
-
   constructor (init: QuicConnectionInit) {
-    super()
+    const remoteAddr = multiaddr(init.connection.remoteMultiaddr())
+
+    super({
+      remoteAddr,
+      direction: init.direction,
+      log: init.log,
+      metrics: init.metrics,
+      metricPrefix: init.metricsPrefix
+    })
 
     this.#connection = init.connection
-    this.log = init.logger.forComponent(`libp2p:quic:connection:${this.#connection.id()}:${init.direction}`)
-    this.remoteAddr = multiaddr(this.#connection.remoteMultiaddr())
-    this.metrics = init.metrics
-    this.metricsPrefix = init.metricsPrefix ?? ''
 
     // close maconn when connection is closed by remote
     this.#connection.closed().then(() => {
-      this.remoteClosed = true
-      this.metrics?.increment({ [`${this.metricsPrefix}end`]: true })
-      this.close()
-        .catch(err => {
-          this.abort(err)
-        })
+      this.onTransportClosed()
     }, (err) => {
-      this.abort(err)
+      this.onTransportClosed(err)
     })
   }
 
-  async close (options?: AbortOptions): Promise<void> {
-    if (this.timeline.close != null) {
-      return
-    }
-
-    this.#connection.abort()
-
-    this.timeline.close = Date.now()
-    this.log('closed')
-
-    if (this.remoteClosed !== true) {
-      this.metrics?.increment({ [`${this.metricsPrefix}close`]: true })
-    }
-
-    this.safeDispatchEvent('close')
+  sendData (data: Uint8ArrayList): SendResult {
+    // QUIC maConn doesn't send byte-level data directly (streams handle that)
+    // but the interface requires this method
+    return { sentBytes: data.byteLength, canSendMore: true }
   }
 
-  abort (err: Error): void {
-    if (this.timeline.close != null) {
-      return
-    }
-
+  sendReset (_err: Error): void {
     this.#connection.abort()
+  }
 
-    this.timeline.close = Date.now()
-    this.log('aborted - %e', err)
-    this.metrics?.increment({ [`${this.metricsPrefix}abort`]: true })
-    this.safeDispatchEvent('close')
+  sendPause (): void {
+    // QUIC handles flow control at transport level
+  }
+
+  sendResume (): void {
+    // QUIC handles flow control at transport level
+  }
+
+  async sendClose (_options?: AbortOptions): Promise<void> {
+    this.#connection.abort()
   }
 }

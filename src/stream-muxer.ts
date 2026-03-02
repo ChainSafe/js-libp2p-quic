@@ -1,9 +1,8 @@
+import { TypedEventEmitter } from '@libp2p/interface'
 import { raceSignal } from 'race-signal'
 import { QuicStream } from './stream.js'
 import type * as napi from './napi.js'
-import type { AbortOptions, ComponentLogger, Logger, Stream, StreamMuxer, StreamMuxerFactory, StreamMuxerInit } from '@libp2p/interface'
-import type { Sink } from 'it-stream-types'
-import type { Uint8ArrayList } from 'uint8arraylist'
+import type { AbortOptions, ComponentLogger, CreateStreamOptions, Logger, MessageStream, Stream, StreamMuxer, StreamMuxerEvents, StreamMuxerFactory, StreamMuxerStatus } from '@libp2p/interface'
 
 interface QuicStreamMuxerFactoryInit {
   connection: napi.Connection
@@ -23,21 +22,22 @@ export class QuicStreamMuxerFactory implements StreamMuxerFactory {
     this.init = init
   }
 
-  createStreamMuxer (init?: StreamMuxerInit): StreamMuxer {
+  createStreamMuxer (maConn: MessageStream): StreamMuxer {
     return new QuicStreamMuxer({
-      ...init,
       connection: this.#connection,
-      logger: this.init.logger
+      logger: this.init.logger,
+      maConn
     })
   }
 }
 
-type QuicStreamMuxerInit = StreamMuxerInit & {
+interface QuicStreamMuxerInit {
   connection: napi.Connection
   logger: ComponentLogger
+  maConn: MessageStream
 }
 
-class QuicStreamMuxer implements StreamMuxer {
+class QuicStreamMuxer extends TypedEventEmitter<StreamMuxerEvents> implements StreamMuxer {
   id: string
   readonly #connection: napi.Connection
   init: QuicStreamMuxerInit
@@ -45,17 +45,25 @@ class QuicStreamMuxer implements StreamMuxer {
 
   protocol: string = 'quic'
   streams: Stream[] = []
-  source: AsyncGenerator<Uint8Array | Uint8ArrayList> = (async function * () {})()
-  sink: Sink<AsyncGenerator<Uint8Array | Uint8ArrayList>> = async function * () {}
+  status: StreamMuxerStatus = 'open'
   controller = new AbortController()
 
   constructor (init: QuicStreamMuxerInit) {
+    super()
     this.id = init.connection.id()
     this.#connection = init.connection
     this.init = init
     this.log = init.logger.forComponent('libp2p:quic:muxer')
 
     void this.awaitInboundStreams()
+
+    // Abort all streams when the underlying connection closes.
+    // This listener is registered before the libp2p Connection's listener,
+    // ensuring streams are cleaned up before the Connection's 'close' event propagates.
+    init.maConn.addEventListener('close', () => {
+      this.abort(new Error('connection closed'))
+    }, { once: true })
+
     this.log('new', this.id)
   }
 
@@ -82,55 +90,69 @@ class QuicStreamMuxer implements StreamMuxer {
       id: str.id(),
       stream: str,
       direction: 'inbound',
-      log: this.init.logger.forComponent(`libp2p:quic:stream:${this.#connection.id()}:${str.id()}:inbound`),
-      onEnd: () => {
-        const index = this.streams.findIndex(s => s === stream)
-        if (index !== -1) {
-          this.streams.splice(index, 1)
-        }
-
-        this.init.onStreamEnd?.(stream)
-      }
+      log: this.init.logger.forComponent(`libp2p:quic:stream:${this.#connection.id()}:${str.id()}:inbound`)
     })
     this.streams.push(stream)
-    this.init.onIncomingStream?.(stream)
+    this.cleanUpStream(stream)
+    this.safeDispatchEvent('stream', { detail: stream })
   }
 
-  async newStream (name?: string): Promise<Stream> {
+  async createStream (_options?: CreateStreamOptions): Promise<Stream> {
     const str = await this.#connection.outboundStream()
     this.controller.signal.throwIfAborted()
     const stream = new QuicStream({
       id: str.id(),
       stream: str,
       direction: 'outbound',
-      log: this.init.logger.forComponent(`libp2p:quic:stream:${this.#connection.id()}:${str.id()}:outbound`),
-      onEnd: () => {
-        const index = this.streams.findIndex(s => s === stream)
-        if (index !== -1) {
-          this.streams.splice(index, 1)
-        }
-
-        this.init.onStreamEnd?.(stream)
-      }
+      log: this.init.logger.forComponent(`libp2p:quic:stream:${this.#connection.id()}:${str.id()}:outbound`)
     })
     this.streams.push(stream)
+    this.cleanUpStream(stream)
     return stream
   }
 
+  private cleanUpStream (stream: Stream): void {
+    stream.addEventListener('close', () => {
+      const index = this.streams.findIndex(s => s === stream)
+      if (index !== -1) {
+        this.streams.splice(index, 1)
+      }
+    }, { once: true })
+  }
+
   async close (options?: AbortOptions): Promise<void> {
+    if (this.status === 'closed' || this.status === 'closing') {
+      return
+    }
+    this.status = 'closing'
     this.controller.abort()
-    await Promise.all(this.streams.map(async (stream) => stream.close(options)))
+    try {
+      // Gracefully close write side of all streams
+      await Promise.all(this.streams.map(async (stream) => stream.close(options)))
+    } catch {
+      // Timeout or other error — fall through to force-abort
+    }
+    // Force-abort any streams still open (read side hasn't closed yet)
+    for (const stream of [...this.streams]) {
+      stream.abort(new Error('muxer closed'))
+    }
     this.streams = []
+    this.status = 'closed'
 
     this.log('%s closed', this.id)
   }
 
   abort (err: Error): void {
+    if (this.status === 'closed') {
+      return
+    }
+    this.status = 'closing'
     this.controller.abort()
     for (const stream of this.streams) {
       stream.abort(err)
     }
     this.streams = []
+    this.status = 'closed'
 
     this.log('%s aborted', this.id)
   }

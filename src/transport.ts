@@ -1,10 +1,12 @@
 import { privateKeyToProtobuf } from '@libp2p/crypto/keys'
 import { AbortError, serviceCapabilities, transportSymbol } from '@libp2p/interface'
+import { peerIdFromString } from '@libp2p/peer-id'
 import { QuicConnection } from './connection.js'
 import { dialFilter, listenFilter } from './filter.js'
 import { QuicListener } from './listener.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
+import { nodeAddressFromMultiaddr } from './utils.js'
 import type { QuicComponents, QuicDialOptions, QuicOptions } from './index.js'
 import type { QuicCreateListenerOptions } from './listener.js'
 import type { Connection, CounterGroup, Listener, Logger, MultiaddrFilter, Transport } from '@libp2p/interface'
@@ -72,7 +74,7 @@ export class QuicTransport implements Transport {
     }
 
     this.log('dialing', ma.toString())
-    const addr = ma.nodeAddress()
+    const addr = nodeAddressFromMultiaddr(ma)
     const dialer = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
 
     const dialPromise = dialer.outboundConnection(addr.address, addr.port)
@@ -86,7 +88,7 @@ export class QuicTransport implements Transport {
     try {
       maConn = new QuicConnection({
         connection,
-        logger: this.components.logger,
+        log: this.components.logger.forComponent(`libp2p:quic:connection:${connection.id()}:outbound`),
         direction: 'outbound',
         metrics: this.metrics?.events
       })
@@ -97,9 +99,18 @@ export class QuicTransport implements Transport {
 
     try {
       this.log('new outbound connection %a', maConn.remoteAddr)
+
+      // Extract remote peer ID from the multiaddr's /p2p/ component
+      const p2pComponent = maConn.remoteAddr.getComponents().find(c => c.name === 'p2p')
+      if (p2pComponent?.value == null) {
+        throw new Error('Remote multiaddr does not contain a peer ID')
+      }
+      const remotePeer = peerIdFromString(p2pComponent.value)
+
       return await options.upgrader.upgradeOutbound(maConn, {
         skipEncryption: true,
         skipProtection: true,
+        remotePeer,
         muxerFactory: new QuicStreamMuxerFactory({
           connection,
           logger: this.components.logger

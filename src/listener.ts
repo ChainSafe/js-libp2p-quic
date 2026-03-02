@@ -1,10 +1,11 @@
 import { setMaxListeners, TypedEventEmitter } from '@libp2p/interface'
+import { peerIdFromString } from '@libp2p/peer-id'
 import { multiaddr } from '@multiformats/multiaddr'
 import { raceSignal } from 'race-signal'
 import { QuicConnection } from './connection.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
-import { getMultiaddrs } from './utils.js'
+import { getMultiaddrs, nodeAddressFromMultiaddr } from './utils.js'
 import type { ComponentLogger, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
@@ -88,14 +89,14 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     this.log('new')
   }
 
-  updateAnnounceAddrs (addrs: Multiaddr[]): void {
+  updateAnnounceAddrs (_addrs: Multiaddr[]): void {
 
   }
 
   getAddrs (): Multiaddr[] {
     if (this.state.status === 'listening') {
       const ma = this.state.listenAddr
-      const addr = ma.nodeAddress()
+      const addr = nodeAddressFromMultiaddr(ma)
 
       if (addr.address === '0.0.0.0') {
         return getMultiaddrs('ip4', addr.address, addr.port)
@@ -109,7 +110,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   }
 
   async listen (ma: Multiaddr): Promise<void> {
-    const addr = ma.nodeAddress()
+    const addr = nodeAddressFromMultiaddr(ma)
     const controller = new AbortController()
     const listener = new napi.Server(this.#config, addr.address, addr.port)
     this.addr = `${addr.address}:${addr.port === 0 ? listener.port() : addr.port}`
@@ -136,7 +137,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
     void this.awaitInboundConnections()
     this.safeDispatchEvent('listening')
-    this.log('listening', multiaddr.toString())
+    this.log('listening', ma.toString())
   }
 
   async close (): Promise<void> {
@@ -199,7 +200,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     try {
       maConn = new QuicConnection({
         connection,
-        logger: this.init.logger,
+        log: this.init.logger.forComponent(`libp2p:quic:connection:${connection.id()}:inbound`),
         direction: 'inbound',
         metrics: this.metrics?.events,
         metricsPrefix: `${this.addr} `
@@ -210,9 +211,17 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
 
     try {
+      // Extract remote peer ID from the multiaddr's /p2p/ component
+      const p2pComponent = maConn.remoteAddr.getComponents().find(c => c.name === 'p2p')
+      if (p2pComponent?.value == null) {
+        throw new Error('Remote multiaddr does not contain a peer ID')
+      }
+      const remotePeer = peerIdFromString(p2pComponent.value)
+
       await this.options.upgrader.upgradeInbound(maConn, {
         skipEncryption: true,
         skipProtection: true,
+        remotePeer,
         muxerFactory: new QuicStreamMuxerFactory({
           connection,
           logger: this.init.logger

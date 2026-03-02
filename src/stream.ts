@@ -1,8 +1,8 @@
-import { AbstractStream } from '@libp2p/utils/abstract-stream'
+import { AbstractStream } from '@libp2p/utils'
 import { Uint8ArrayList } from 'uint8arraylist'
 import type * as napi from './napi.js'
 import type { AbortOptions } from '@libp2p/interface'
-import type { AbstractStreamInit } from '@libp2p/utils/abstract-stream'
+import type { AbstractStreamInit, SendResult } from '@libp2p/utils'
 
 export interface QuicStreamInit extends AbstractStreamInit {
   stream: napi.Stream
@@ -10,44 +10,61 @@ export interface QuicStreamInit extends AbstractStreamInit {
 
 export class QuicStream extends AbstractStream {
   readonly #stream: napi.Stream
+  #pendingWrite: Promise<void> = Promise.resolve()
+  #readClosed = false
 
   constructor (init: QuicStreamInit) {
     super(init)
     this.#stream = init.stream
-    this.direction = init.direction
 
     this.log('new', this.direction, this.id)
 
-    this.readyFromStream()
+    this.readFromStream()
       .catch(err => {
         this.log.error('error reading from stream - %e', err)
       })
   }
 
-  sendNewStream (options?: AbortOptions): void | Promise<void> {
-
+  sendData (data: Uint8ArrayList): SendResult {
+    this.log.trace('writing %d bytes', data.byteLength)
+    const buf = data.subarray()
+    // Chain writes to ensure ordering — each write completes before the next starts
+    this.#pendingWrite = this.#pendingWrite.then(
+      () => this.#stream.write(buf)
+    ).then(
+      () => { this.log.trace('wrote %d bytes', buf.byteLength) },
+      (err) => { this.log.error('write error - %e', err) }
+    )
+    return { sentBytes: data.byteLength, canSendMore: true }
   }
 
-  async sendData (buf: Uint8ArrayList, options?: AbortOptions): Promise<void> {
-    this.log.trace('writing %d bytes', buf.byteLength)
-    await this.#stream.write(buf.subarray())
-    this.log.trace('wrote %d bytes', buf.byteLength)
+  sendReset (_err: Error): void {
+    void this.#stream.resetWrite()
+    void this.#stream.stopRead()
   }
 
-  async sendReset (options?: AbortOptions): Promise<void> {
-    await this.#stream.resetWrite()
-    await this.#stream.stopRead()
-  }
-
-  async sendCloseWrite (options?: AbortOptions): Promise<void> {
+  async sendCloseWrite (_options?: AbortOptions): Promise<void> {
+    // Wait for all pending writes to complete before sending FIN
+    await this.#pendingWrite
     await this.#stream.finishWrite()
   }
 
-  async sendCloseRead (options?: AbortOptions): Promise<void> {
-    // TODO: how to do this?
+  async sendCloseRead (_options?: AbortOptions): Promise<void> {
+    // Don't call native stopRead() here — the read loop must stay active
+    // to detect when the remote closes their write end (FIN).
+    // QUIC flow control handles backpressure at the transport level.
+    this.#readClosed = true
   }
 
-  async readyFromStream (): Promise<void> {
+  sendPause (): void {
+    // QUIC handles flow control at the transport level
+  }
+
+  sendResume (): void {
+    // QUIC handles flow control at the transport level
+  }
+
+  async readFromStream (): Promise<void> {
     try {
       while (true) {
         this.log.trace('reading')
@@ -57,7 +74,9 @@ export class QuicStream extends AbstractStream {
           break
         }
 
-        this.sourcePush(new Uint8ArrayList(chunk))
+        if (!this.#readClosed) {
+          this.onData(new Uint8ArrayList(chunk))
+        }
 
         this.log.trace('read %d bytes', chunk.length)
       }
@@ -65,14 +84,13 @@ export class QuicStream extends AbstractStream {
       this.log.error('source error - %e', err)
 
       if (err.code === 'Unknown') {
-        // clean exit
-        this.remoteCloseRead()
+        // Stream error from connection close
         return
       }
 
       this.abort(err)
     } finally {
-      this.remoteCloseWrite()
+      this.onRemoteCloseWrite()
     }
   }
 }
