@@ -258,13 +258,13 @@ impl Stream {
   }
 
   #[napi(ts_return_type = "Promise<void>")]
-  pub async fn write(&self, data: Uint8Array) -> Result<Uint8Array> {
-    self.send.lock().await.write_all(&data).await.map_err(to_err)?;
-    // Return the Uint8Array so it is dropped on the JS thread (via the
-    // resolver callback) instead of on the Tokio worker thread.  Dropping
-    // on the Tokio thread goes through CUSTOM_GC_TSFN, which can race
-    // with V8's garbage collector and cause a use-after-free / segfault.
-    Ok(data)
+  pub async fn write(&self, data: Uint8Array) -> Result<WriteResult> {
+    let error = self.send.lock().await.write_all(&data).await
+      .err().map(|e| e.to_string());
+    // Always return Ok so the Uint8Array reaches the JS thread for safe
+    // napi_ref cleanup.  WriteResult::to_napi_value handles both cleanup
+    // and error propagation (rejecting the promise when error is Some).
+    Ok(WriteResult { data, error })
   }
 
   #[napi]
@@ -280,6 +280,34 @@ impl Stream {
   #[napi]
   pub async fn stop_read(&self) {
     let _ = self.recv.lock().await.stop(0u8.into());
+  }
+}
+
+/// Wrapper that smuggles a Uint8Array back to the JS thread even when the
+/// write operation fails.  The async fn always returns `Ok(WriteResult)`,
+/// guaranteeing the Uint8Array is never dropped on the Tokio thread.
+///
+/// `ToNapiValue` (which runs on the JS thread) cleans up the napi_ref and
+/// then either resolves (success) or rejects (error) the promise.
+pub struct WriteResult {
+  data: Uint8Array,
+  error: Option<String>,
+}
+
+impl ToNapiValue for WriteResult {
+  unsafe fn to_napi_value(env: napi::sys::napi_env, val: Self) -> napi::Result<napi::sys::napi_value> {
+    // Always clean up the Uint8Array's napi_ref on the JS thread.
+    // to_napi_value consumes the Uint8Array, deleting its reference.
+    let _ = Uint8Array::to_napi_value(env, val.data);
+
+    // If the write failed, return Err to reject the promise.
+    if let Some(err) = val.error {
+      return Err(napi::Error::new(Status::Unknown, err));
+    }
+
+    let mut result = std::ptr::null_mut();
+    let _ = napi::check_status!(napi::sys::napi_get_undefined(env, &mut result));
+    Ok(result)
   }
 }
 
