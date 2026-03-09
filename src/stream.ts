@@ -10,7 +10,6 @@ export interface QuicStreamInit extends AbstractStreamInit {
 
 export class QuicStream extends AbstractStream {
   readonly #stream: napi.Stream
-  #pendingWrite: Promise<void> = Promise.resolve()
   #readClosed = false
 
   constructor (init: QuicStreamInit) {
@@ -28,17 +27,22 @@ export class QuicStream extends AbstractStream {
   sendData (data: Uint8ArrayList): SendResult {
     this.log.trace('writing %d bytes', data.byteLength)
     const buf = data.subarray()
-    // Chain writes to ensure ordering — each write completes before the next starts
-    this.#pendingWrite = this.#pendingWrite.then(
-      () => this.#stream.write(buf)
-    ).then(
-      () => { this.log.trace('wrote %d bytes', buf.byteLength) },
+
+    // Start the async native write and signal backpressure so the base class
+    // waits for a drain event before sending more data — this serializes
+    // writes through the base class's own send queue.
+    this.#stream.write(buf).then(
+      () => {
+        this.log.trace('wrote %d bytes', buf.byteLength)
+        this.safeDispatchEvent('drain')
+      },
       (err) => {
         this.log.error('write error - %e', err)
         this.abort(err)
       }
     )
-    return { sentBytes: data.byteLength, canSendMore: true }
+
+    return { sentBytes: data.byteLength, canSendMore: false }
   }
 
   sendReset (_err: Error): void {
@@ -47,8 +51,8 @@ export class QuicStream extends AbstractStream {
   }
 
   async sendCloseWrite (_options?: AbortOptions): Promise<void> {
-    // Wait for all pending writes to complete before sending FIN
-    await this.#pendingWrite
+    // By the time the base class calls this, it has already waited for
+    // the write buffer to drain (idle + drain), so all writes are complete.
     await this.#stream.finishWrite()
   }
 
