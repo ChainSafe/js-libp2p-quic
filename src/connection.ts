@@ -37,10 +37,10 @@ export class QuicConnection extends AbstractMultiaddrConnection {
     })
   }
 
-  sendData (data: Uint8ArrayList): SendResult {
-    // QUIC maConn doesn't send byte-level data directly (streams handle that)
-    // but the interface requires this method
-    return { sentBytes: data.byteLength, canSendMore: true }
+  sendData (_data: Uint8ArrayList): SendResult {
+    // QUIC maConn doesn't send byte-level data directly — streams handle that.
+    // Throw to fail fast if anything accidentally writes to the connection.
+    throw new Error('QuicConnection does not support direct data writes — use streams instead')
   }
 
   sendReset (_err: Error): void {

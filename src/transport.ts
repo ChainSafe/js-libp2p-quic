@@ -103,7 +103,7 @@ export class QuicTransport implements Transport {
       // Extract remote peer ID from the multiaddr's /p2p/ component
       const p2pComponent = maConn.remoteAddr.getComponents().find(c => c.name === 'p2p')
       if (p2pComponent?.value == null) {
-        throw new Error('Remote multiaddr does not contain a peer ID')
+        throw new Error(`Remote multiaddr does not contain a peer ID: ${maConn.remoteAddr.toString()}`)
       }
       const remotePeer = peerIdFromString(p2pComponent.value)
 

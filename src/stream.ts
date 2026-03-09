@@ -33,7 +33,11 @@ export class QuicStream extends AbstractStream {
       () => this.#stream.write(buf)
     ).then(
       () => { this.log.trace('wrote %d bytes', buf.byteLength) },
-      (err) => { this.log.error('write error - %e', err) }
+      (err) => {
+        this.log.error('write error - %e', err)
+        this.abort(err)
+        throw err
+      }
     )
     return { sentBytes: data.byteLength, canSendMore: true }
   }
