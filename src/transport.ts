@@ -100,12 +100,22 @@ export class QuicTransport implements Transport {
     try {
       this.log('new outbound connection %a', maConn.remoteAddr)
 
-      // Extract remote peer ID from the multiaddr's /p2p/ component
+      // Extract remote peer ID from the TLS-derived multiaddr
       const p2pComponent = maConn.remoteAddr.getComponents().find(c => c.name === 'p2p')
       if (p2pComponent?.value == null) {
         throw new Error(`Remote multiaddr does not contain a peer ID: ${maConn.remoteAddr.toString()}`)
       }
       const remotePeer = peerIdFromString(p2pComponent.value)
+
+      // If the dialed multiaddr included a /p2p/ component, verify it matches
+      // the TLS-derived peer ID to prevent connecting to an unexpected peer
+      const expectedP2p = ma.getComponents().find(c => c.name === 'p2p')
+      if (expectedP2p?.value != null) {
+        const expectedPeer = peerIdFromString(expectedP2p.value)
+        if (!remotePeer.equals(expectedPeer)) {
+          throw new Error(`Dialed peer ${expectedPeer.toString()} but connected to ${remotePeer.toString()}`)
+        }
+      }
 
       return await options.upgrader.upgradeOutbound(maConn, {
         skipEncryption: true,
