@@ -88,13 +88,13 @@ export class QuicStream extends AbstractStream {
         this.log.trace('read %d bytes', chunk.length)
       }
     } catch (err: any) {
-      this.log.error('source error - %e', err)
-
       if (err.code === 'Unknown') {
-        // Stream error from connection close
+        // Expected: native stream closed (connection close, stream reset, etc.)
+        this.log.trace('read ended - %e', err)
         return
       }
 
+      this.log.error('source error - %e', err)
       this.abort(err)
     } finally {
       this.onRemoteCloseWrite()

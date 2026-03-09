@@ -8,7 +8,7 @@ import { expect } from 'aegir/chai'
 import { pEvent } from 'p-event'
 import { stubInterface } from 'sinon-ts'
 import { quic } from '../src/index.js'
-import { hostFromMultiaddr, portFromMultiaddr } from '../src/utils.js'
+import { nodeAddressFromMultiaddr } from '../src/utils.js'
 import { createComponents } from './util.js'
 import type { QuicComponents } from '../src/index.js'
 import type { Listener, Upgrader } from '@libp2p/interface'
@@ -66,14 +66,14 @@ describe('Quic Transport', () => {
     const addrs = listener.getAddrs()
 
     for (const addr of addrs) {
-      expect(portFromMultiaddr(addr)).to.be.greaterThan(0, 'did not translate wildcard port')
+      expect(nodeAddressFromMultiaddr(addr).port).to.be.greaterThan(0, 'did not translate wildcard port')
     }
 
     if (wildcard) {
-      const host = hostFromMultiaddr(ma)
+      const host = nodeAddressFromMultiaddr(ma).address
 
       for (const addr of addrs) {
-        expect(hostFromMultiaddr(addr)).to.not.equal(host, 'did not translate wildcard host')
+        expect(nodeAddressFromMultiaddr(addr).address).to.not.equal(host, 'did not translate wildcard host')
       }
     } else {
       expect(addrs).to.have.lengthOf(1, 'listened on too many addresses')
@@ -128,8 +128,7 @@ describe('Quic Transport', () => {
     let hadIp6 = false
 
     for (const addr of addrs) {
-      const host = hostFromMultiaddr(addr)
-      const port = portFromMultiaddr(addr)
+      const { address: host, port } = nodeAddressFromMultiaddr(addr)
       expect(port).to.be.greaterThan(0, 'did not translate wildcard port')
 
       if (isIPv4(host)) {
@@ -178,7 +177,7 @@ describe('Quic Transport', () => {
     expect(addrs).to.have.lengthOf(2, 'did not listen on correct amount of addresses')
 
     for (const addr of addrs) {
-      expect(portFromMultiaddr(addr)).to.equal(14000, 'did not listen on port')
+      expect(nodeAddressFromMultiaddr(addr).port).to.equal(14000, 'did not listen on port')
     }
   })
 })

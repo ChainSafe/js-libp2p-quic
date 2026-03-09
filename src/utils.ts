@@ -24,20 +24,9 @@ export function nodeAddressFromMultiaddr (ma: Multiaddr): NodeAddress {
   return {
     family: ip.name === 'ip4' ? 4 : 6,
     address: ip.value,
+    // Multiaddr guarantees that udp port is a valid integer string
     port: parseInt(udp.value, 10)
   }
-}
-
-export function hostFromMultiaddr (ma: Multiaddr): string {
-  const components = ma.getComponents()
-  const ip = components.find(c => c.name === 'ip4' || c.name === 'ip6')
-  return ip?.value ?? ''
-}
-
-export function portFromMultiaddr (ma: Multiaddr): number {
-  const components = ma.getComponents()
-  const udp = components.find(c => c.name === 'udp')
-  return parseInt(udp?.value ?? '0', 10)
 }
 
 const ProtoFamily = { ip4: 'IPv4', ip6: 'IPv6' }
