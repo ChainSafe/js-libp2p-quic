@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.8...v2.0.0) (2026-03-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires @libp2p/interface ^3.1.0 and @libp2p/utils ^7.0.11
+
+### Features
+
+* migrate to libp2p v3 ([#54](https://github.com/ChainSafe/js-libp2p-quic/issues/54)) ([5485f23](https://github.com/ChainSafe/js-libp2p-quic/commit/5485f23181f57b504f5b8fca2d9bb7c6d19c501b))
+
+
+### Bug Fixes
+
+* drop Uint8Array on JS thread to prevent stream.write segfault ([#53](https://github.com/ChainSafe/js-libp2p-quic/issues/53)) ([901f4d2](https://github.com/ChainSafe/js-libp2p-quic/commit/901f4d2d244194f8cbae6901f5a7d39cdc3733e6))
+
 ## [1.1.8](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.7...v1.1.8) (2025-12-12)
 
 
