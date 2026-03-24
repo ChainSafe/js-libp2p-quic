@@ -31,7 +31,23 @@ import { QuicTransport } from './transport.js'
 import type * as napi from './napi.js'
 import type { ComponentLogger, DialTransportOptions, Metrics, PrivateKey, Transport } from '@libp2p/interface'
 
-export type QuicOptions = Omit<napi.Config, 'privateKeyProto'>
+export type QuicOptions = Omit<napi.Config, 'privateKeyProto'> & {
+  /**
+   * Enable IPv4 QUIC client for outbound connections.
+   * When set to false, IPv4 connections will not be supported.
+   *
+   * @default true
+   */
+  ipv4?: boolean
+
+  /**
+   * Enable IPv6 QUIC client for outbound connections.
+   * When set to false, IPv6 connections will not be supported.
+   *
+   * @default true
+   */
+  ipv6?: boolean
+}
 
 export interface QuicComponents {
   metrics?: Metrics
