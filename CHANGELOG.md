@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.0.0...v2.0.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* allow selective IPv4/IPv6 QUIC client creation ([#56](https://github.com/ChainSafe/js-libp2p-quic/issues/56)) ([ca3050a](https://github.com/ChainSafe/js-libp2p-quic/commit/ca3050a69c8e652b49473de43d23fb4da5d2c264))
+* **ci:** switch x86_64 GNU target from napi-cross to zigbuild ([#57](https://github.com/ChainSafe/js-libp2p-quic/issues/57)) ([44e2aa9](https://github.com/ChainSafe/js-libp2p-quic/commit/44e2aa909792c2c94f6d17124a4fbd20409b30fe))
+
 ## [2.0.0](https://github.com/ChainSafe/js-libp2p-quic/compare/v1.1.8...v2.0.0) (2026-03-09)
 
 
