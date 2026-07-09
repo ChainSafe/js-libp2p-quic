@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.0.1...v2.1.0) (2026-07-09)
+
+
+### Features
+
+* implement Startable lifecycle for QuicTransport ([#59](https://github.com/ChainSafe/js-libp2p-quic/issues/59)) ([47d3187](https://github.com/ChainSafe/js-libp2p-quic/commit/47d3187eb0d1b3d7201afff462ed3e411a9cb0d9))
+
 ## [2.0.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.0.0...v2.0.1) (2026-03-26)
 
 
