@@ -29,6 +29,8 @@ export class QuicTransport implements Transport {
   readonly metrics: QuicTransportMetrics
 
   readonly #config: napi.QuinnConfig
+  readonly #enableIpv4: boolean
+  readonly #enableIpv6: boolean
 
   readonly #clients: {
     ip4?: napi.Client
@@ -46,33 +48,11 @@ export class QuicTransport implements Transport {
     this.components = components
 
     this.#config = new napi.QuinnConfig(config)
+    this.#enableIpv4 = options.ipv4 !== false
+    this.#enableIpv6 = options.ipv6 !== false
+    this.#clients = {}
 
-    let ip4Client: napi.Client | undefined
-    if (options.ipv4 !== false) {
-      try {
-        ip4Client = new napi.Client(this.#config, 0)
-      } catch {
-        this.log('IPv4 QUIC client not available')
-      }
-    }
-
-    let ip6Client: napi.Client | undefined
-    if (options.ipv6 !== false) {
-      try {
-        ip6Client = new napi.Client(this.#config, 1)
-      } catch {
-        this.log('IPv6 QUIC client not available')
-      }
-    }
-
-    if (ip4Client == null && ip6Client == null) {
-      throw new Error('At least one of ipv4 or ipv6 must be enabled for QUIC transport')
-    }
-
-    this.#clients = {
-      ip4: ip4Client,
-      ip6: ip6Client
-    }
+    this.#openClients()
 
     this.metrics = {
       events: this.components.metrics?.registerCounterGroup('libp2p_quic_dialer_events_total', {
@@ -89,6 +69,48 @@ export class QuicTransport implements Transport {
     this.dialFilter = dialFilter
 
     this.log('new')
+  }
+
+  #openClients (): void {
+    if (this.#clients.ip4 != null || this.#clients.ip6 != null) {
+      return
+    }
+
+    if (this.#enableIpv4) {
+      try {
+        this.#clients.ip4 = new napi.Client(this.#config, 0)
+      } catch {
+        this.log('IPv4 QUIC client not available')
+      }
+    }
+
+    if (this.#enableIpv6) {
+      try {
+        this.#clients.ip6 = new napi.Client(this.#config, 1)
+      } catch {
+        this.log('IPv6 QUIC client not available')
+      }
+    }
+
+    if (this.#clients.ip4 == null && this.#clients.ip6 == null) {
+      throw new Error('At least one of ipv4 or ipv6 must be enabled for QUIC transport')
+    }
+  }
+
+  async start (): Promise<void> {
+    this.#openClients()
+    this.log('started')
+  }
+
+  async stop (): Promise<void> {
+    const { ip4, ip6 } = this.#clients
+
+    this.#clients.ip4 = undefined
+    this.#clients.ip6 = undefined
+
+    ip4?.abort()
+    ip6?.abort()
+    this.log('stopped')
   }
 
   async dial (ma: Multiaddr, options: QuicDialOptions): Promise<Connection> {

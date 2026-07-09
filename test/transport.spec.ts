@@ -11,7 +11,7 @@ import { quic } from '../src/index.js'
 import { nodeAddressFromMultiaddr } from '../src/utils.js'
 import { createComponents } from './util.js'
 import type { QuicComponents } from '../src/index.js'
-import type { Listener, Upgrader } from '@libp2p/interface'
+import type { Connection, Listener, MultiaddrConnection, Upgrader } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 describe('Quic Transport', () => {
@@ -44,6 +44,35 @@ describe('Quic Transport', () => {
       ...valid,
       ...invalid
     ])).to.deep.equal(valid)
+  })
+
+  it('can dial after stop and start', async () => {
+    const transport = quic({ ipv6: false })(components)
+    const startable = transport as typeof transport & {
+      start(): Promise<void>
+      stop(): Promise<void>
+    }
+    const upgrader = {
+      upgradeInbound: async () => {},
+      upgradeOutbound: async (conn: MultiaddrConnection) => conn as unknown as Connection
+    } as unknown as Upgrader
+    const listener = transport.createListener({ upgrader })
+    listeners.push(listener)
+
+    await Promise.all([
+      pEvent(listener, 'listening'),
+      listener.listen(multiaddr('/ip4/127.0.0.1/udp/0/quic-v1'))
+    ])
+
+    await startable.stop()
+    await startable.start()
+
+    const [addr] = listener.getAddrs()
+    expect(addr).to.not.equal(undefined)
+
+    const conn = await transport.dial(addr, { upgrader, signal: new AbortController().signal })
+    await conn.close()
+    await startable.stop()
   })
 
   async function testListenAddresses (ma: Multiaddr, wildcard: boolean): Promise<void> {
