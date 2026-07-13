@@ -247,9 +247,9 @@ jobs:
         with:
           node-version: 22
       - name: Update npm
-        run: npm install -g npm
+        run: npm install -g npm@12.0.1
         shell: bash
-        if: ${{ steps.release.outputs.release_created }}                  
+        if: ${{ steps.release.outputs.release_created }}
       - name: Install dependencies
         if: ${{ steps.release.outputs.release_created }}
         run: pnpm install
