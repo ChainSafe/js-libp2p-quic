@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.0...v2.1.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* pin npm for releases ([#61](https://github.com/ChainSafe/js-libp2p-quic/issues/61)) ([706e28a](https://github.com/ChainSafe/js-libp2p-quic/commit/706e28a8b13b40e953303293098bb868e9b87979))
+
 ## [2.1.0](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.0.1...v2.1.0) (2026-07-09)
 
 
