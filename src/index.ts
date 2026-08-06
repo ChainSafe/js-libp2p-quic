@@ -63,6 +63,7 @@ export function quic (options?: Partial<QuicOptions>): (components: QuicComponen
 
 export const defaultOptions: QuicOptions = {
   handshakeTimeout: 5_000,
+  shutdownTimeout: 3_000,
   maxIdleTimeout: 10_000,
   keepAliveInterval: 5_000,
   maxConcurrentStreamLimit: 256,

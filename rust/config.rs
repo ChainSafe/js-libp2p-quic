@@ -65,6 +65,9 @@ pub struct Config {
   /// The actual timeout is the minimum of this and the [`Config::max_idle_timeout`].
   pub handshake_timeout: u32,
 
+  /// Maximum duration in ms for draining the server endpoint during shutdown.
+  pub shutdown_timeout: u32,
+
   /// Maximum duration of inactivity in ms to accept before timing out the connection.
   pub max_idle_timeout: u32,
 
@@ -123,6 +126,7 @@ pub struct QuinnConfig {
   pub(crate) server_config: quinn::ServerConfig,
   pub(crate) endpoint_config: quinn::EndpointConfig,
   pub(crate) socket_config: SocketConfig,
+  pub(crate) shutdown_timeout: Duration,
 }
 
 #[napi]
@@ -138,6 +142,7 @@ impl TryFrom<Config> for QuinnConfig {
   fn try_from(config: Config) -> Result<QuinnConfig> {
     let Config {
       private_key_proto,
+      shutdown_timeout,
       max_idle_timeout,
       max_concurrent_stream_limit,
       keep_alive_interval,
@@ -210,6 +215,7 @@ impl TryFrom<Config> for QuinnConfig {
         receive_buffer_size,
         send_buffer_size,
       },
+      shutdown_timeout: Duration::from_millis(shutdown_timeout.into()),
     })
   }
 }

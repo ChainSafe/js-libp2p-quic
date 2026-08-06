@@ -13,7 +13,7 @@ mod config;
 mod socket;
 mod stats;
 
-const SERVER_SHUTDOWN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+const SOCKET_UNBIND_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
 
 async fn completes_before_timeout<F>(future: F, duration: std::time::Duration) -> bool
 where
@@ -32,6 +32,7 @@ pub enum SocketFamily {
 pub struct Server {
   socket: Arc<socket::UdpSocket>,
   endpoint: quinn::Endpoint,
+  shutdown_timeout: std::time::Duration,
 }
 
 #[napi]
@@ -63,7 +64,7 @@ impl Server {
         Arc::new(quinn::TokioRuntime),
       )
     })?;
-    Ok(Self { socket, endpoint })
+    Ok(Self { socket, endpoint, shutdown_timeout: config.shutdown_timeout })
   }
 
   #[napi]
@@ -87,12 +88,11 @@ impl Server {
 
     // wait_idle() depends on every connection driver reaching the drained
     // state. Bound the wait so one stalled driver cannot block listener close.
-    let drained =
-      completes_before_timeout(self.endpoint.wait_idle(), SERVER_SHUTDOWN_TIMEOUT).await;
+    let drained = completes_before_timeout(self.endpoint.wait_idle(), self.shutdown_timeout).await;
 
     // Always try to release the listening socket, including after a drain
     // timeout. Acquiring the socket's write lock must also be bounded.
-    let unbound = completes_before_timeout(self.socket.unbind(), SERVER_SHUTDOWN_TIMEOUT).await;
+    let unbound = completes_before_timeout(self.socket.unbind(), SOCKET_UNBIND_TIMEOUT).await;
 
     drained && unbound
   }
