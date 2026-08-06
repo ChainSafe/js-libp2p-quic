@@ -13,15 +13,6 @@ mod config;
 mod socket;
 mod stats;
 
-const SOCKET_UNBIND_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
-
-async fn completes_before_timeout<F>(future: F, duration: std::time::Duration) -> bool
-where
-  F: std::future::Future<Output = ()>,
-{
-  tokio::time::timeout(duration, future).await.is_ok()
-}
-
 #[napi]
 pub enum SocketFamily {
   Ipv4,
@@ -83,18 +74,14 @@ impl Server {
   }
 
   #[napi]
-  pub async fn abort(&self) -> bool {
+  pub async fn abort(&self) {
     self.endpoint.close(0u8.into(), b"");
 
     // wait_idle() depends on every connection driver reaching the drained
-    // state. Bound the wait so one stalled driver cannot block listener close.
-    let drained = completes_before_timeout(self.endpoint.wait_idle(), self.shutdown_timeout).await;
+    // state, we bound the wait so one stalled driver cannot block listener close.
+    let _ = tokio::time::timeout(self.shutdown_timeout, self.endpoint.wait_idle()).await;
 
-    // Always try to release the listening socket, including after a drain
-    // timeout. Acquiring the socket's write lock must also be bounded.
-    let unbound = completes_before_timeout(self.socket.unbind(), SOCKET_UNBIND_TIMEOUT).await;
-
-    drained && unbound
+    self.socket.unbind().await;
   }
 
   #[napi]

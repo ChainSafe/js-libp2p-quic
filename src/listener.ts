@@ -147,11 +147,7 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
         conn.abort(new Error('listener closed'))
       }
       this.state.connections.clear()
-      const cleanShutdown = await this.state.listener.abort()
-      if (!cleanShutdown) {
-        this.log.error('timed out waiting for QUIC listener shutdown')
-        this.metrics.errors?.increment({ [`${this.addr} close_timeout`]: true })
-      }
+      await this.state.listener.abort()
       const listenAddr = this.state.listenAddr
       this.state = { status: 'closed' }
       // stop any in-progress connection upgrades
