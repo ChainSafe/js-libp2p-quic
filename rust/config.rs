@@ -66,21 +66,6 @@ pub struct Config {
   pub handshake_timeout: u32,
 
   /// Maximum duration in ms for draining the server endpoint during shutdown.
-  ///
-  /// The 3s default is derived from QUIC's draining period:
-  ///
-  /// quinn arms each connection's close/drain timer at 3x PTO (RFC 9000 §10.2)
-  ///
-  /// PTO = RTT + 4x RTT variance + the peer's max_ack_delay
-  ///
-  /// RTT = 333ms
-  /// RTT variance: RTT / 2
-  /// PTO = 333 ms + 4 × 166.5 ms = 999 ms
-  /// 3 * PTO = roughly 3s
-  ///
-  /// This timeout can only trip when a connection driver has stopped unexpectedly.
-  /// Waiting longer cannot help — an unbounded wait
-  /// hangs the caller's entire shutdown (see ChainSafe/lodestar#9744).
   pub shutdown_timeout: u32,
 
   /// Maximum duration of inactivity in ms to accept before timing out the connection.
