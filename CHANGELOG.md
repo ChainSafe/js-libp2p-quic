@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.1...v2.1.2) (2026-08-07)
+
+
+### Bug Fixes
+
+* bound QUIC listener shutdown ([#64](https://github.com/ChainSafe/js-libp2p-quic/issues/64)) ([ec1b7a4](https://github.com/ChainSafe/js-libp2p-quic/commit/ec1b7a43754d29e259900f0deef99ed676f12f4e))
+* update quinn-proto to 0.11.15 ([#63](https://github.com/ChainSafe/js-libp2p-quic/issues/63)) ([8896f1c](https://github.com/ChainSafe/js-libp2p-quic/commit/8896f1c63e65082e4b53cec577fec1dc768b94f1))
+
 ## [2.1.1](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.0...v2.1.1) (2026-07-13)
 
 
