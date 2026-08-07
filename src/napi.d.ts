@@ -365,6 +365,10 @@ export interface Config {
    * The actual timeout is the minimum of this and the [`Config::max_idle_timeout`].
    */
   handshakeTimeout: number
+  /**
+   * Maximum duration in ms for draining the server endpoint during shutdown.
+   */
+  shutdownTimeout: number
   /** Maximum duration of inactivity in ms to accept before timing out the connection. */
   maxIdleTimeout: number
   /**

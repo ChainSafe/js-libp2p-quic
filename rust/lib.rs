@@ -23,6 +23,7 @@ pub enum SocketFamily {
 pub struct Server {
   socket: Arc<socket::UdpSocket>,
   endpoint: quinn::Endpoint,
+  shutdown_timeout: std::time::Duration,
 }
 
 #[napi]
@@ -54,7 +55,7 @@ impl Server {
         Arc::new(quinn::TokioRuntime),
       )
     })?;
-    Ok(Self { socket, endpoint })
+    Ok(Self { socket, endpoint, shutdown_timeout: config.shutdown_timeout })
   }
 
   #[napi]
@@ -75,7 +76,11 @@ impl Server {
   #[napi]
   pub async fn abort(&self) {
     self.endpoint.close(0u8.into(), b"");
-    self.endpoint.wait_idle().await;
+
+    // wait_idle() depends on every connection driver reaching the drained
+    // state, we bound the wait so one stalled driver cannot block listener close.
+    let _ = tokio::time::timeout(self.shutdown_timeout, self.endpoint.wait_idle()).await;
+
     self.socket.unbind().await;
   }
 

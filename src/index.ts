@@ -57,12 +57,27 @@ export interface QuicComponents {
 
 export type QuicDialOptions = DialTransportOptions
 
-export function quic (options?: Partial<QuicOptions>): (components: QuicComponents) => Transport {
+export function quic(options?: Partial<QuicOptions>): (components: QuicComponents) => Transport {
   return (components) => new QuicTransport(components, { ...defaultOptions, ...options })
 }
 
 export const defaultOptions: QuicOptions = {
   handshakeTimeout: 5_000,
+  /// The 3s default is derived from QUIC's draining period:
+  ///
+  /// quinn arms each connection's close/drain timer at 3x PTO (RFC 9000 §10.2)
+  ///
+  /// PTO = RTT + 4x RTT variance + the peer's max_ack_delay
+  ///
+  /// RTT = 333ms
+  /// RTT variance: RTT / 2
+  /// PTO = 333 ms + 4 × 166.5 ms = 999 ms
+  /// 3 * PTO = roughly 3s
+  ///
+  /// This timeout can only trip when a connection driver has stopped unexpectedly.
+  /// Waiting longer cannot help — an unbounded wait
+  /// hangs the caller's entire shutdown (see ChainSafe/lodestar#9744).
+  shutdownTimeout: 3_000,
   maxIdleTimeout: 10_000,
   keepAliveInterval: 5_000,
   maxConcurrentStreamLimit: 256,
