@@ -179,7 +179,8 @@ impl Connection {
   /// close the connection immediately
   pub fn abort(&self) {
     self.connection.close(0u8.into(), b"");
-    let _ = self.aborted.send(true);
+    // `send_replace` rather than `send`, the latter drops the value when there is no receiver yet
+    self.aborted.send_replace(true);
   }
 
   #[napi]
