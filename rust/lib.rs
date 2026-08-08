@@ -153,12 +153,14 @@ impl Client {
 #[napi]
 pub struct Connection {
   connection: quinn::Connection,
+  aborted: tokio::sync::watch::Sender<bool>,
 }
 
 #[napi]
 impl Connection {
   pub fn new(connection: quinn::Connection) -> Self {
-    Self { connection }
+    let (aborted, _) = tokio::sync::watch::channel(false);
+    Self { connection, aborted }
   }
 
   #[napi]
@@ -177,6 +179,7 @@ impl Connection {
   /// close the connection immediately
   pub fn abort(&self) {
     self.connection.close(0u8.into(), b"");
+    let _ = self.aborted.send(true);
   }
 
   #[napi]
@@ -221,8 +224,24 @@ impl Connection {
   }
 
   #[napi]
+  /// Resolves when the connection closes, or as soon as `abort()` is called.
+  ///
+  /// The JS side keeps one of these pending per connection for its whole lifetime, and it is backed
+  /// by a napi deferred on the calling thread. `connection.closed()` only resolves once the driver
+  /// reports the connection closed, and a stalled driver never does, so on shutdown the deferred is
+  /// never settled and the thread can not finish tearing down - in a worker that means
+  /// `Worker.terminate()` never resolves. Settling on `abort()` too keeps that bounded.
   pub async fn closed(&self) -> () {
-    self.connection.closed().await;
+    let mut aborted = self.aborted.subscribe();
+
+    if *aborted.borrow_and_update() {
+      return;
+    }
+
+    tokio::select! {
+      _ = self.connection.closed() => {}
+      _ = aborted.changed() => {}
+    }
   }
 
   #[napi]
