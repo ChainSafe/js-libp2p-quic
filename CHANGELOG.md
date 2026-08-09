@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.3](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.2...v2.1.3) (2026-08-09)
+
+
+### Bug Fixes
+
+* settle connection.closed() when the connection is aborted ([#66](https://github.com/ChainSafe/js-libp2p-quic/issues/66)) ([554deb1](https://github.com/ChainSafe/js-libp2p-quic/commit/554deb15c566e8fb7ac37734afffba2f242c4252))
+
 ## [2.1.2](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.1...v2.1.2) (2026-08-07)
 
 
