@@ -227,11 +227,8 @@ impl Connection {
   #[napi]
   /// Resolves when the connection closes, or as soon as `abort()` is called.
   ///
-  /// The JS side keeps one of these pending per connection for its whole lifetime, and it is backed
-  /// by a napi deferred on the calling thread. `connection.closed()` only resolves once the driver
-  /// reports the connection closed, and a stalled driver never does, so on shutdown the deferred is
-  /// never settled and the thread can not finish tearing down - in a worker that means
-  /// `Worker.terminate()` never resolves. Settling on `abort()` too keeps that bounded.
+  /// Signalling local abort ensures the JS transport observes the closure even if
+  /// the connection drivers do not finish shutting down.
   pub async fn closed(&self) -> () {
     let mut aborted = self.aborted.subscribe();
 
