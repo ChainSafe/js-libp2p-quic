@@ -153,12 +153,14 @@ impl Client {
 #[napi]
 pub struct Connection {
   connection: quinn::Connection,
+  aborted: tokio::sync::watch::Sender<bool>,
 }
 
 #[napi]
 impl Connection {
   pub fn new(connection: quinn::Connection) -> Self {
-    Self { connection }
+    let (aborted, _) = tokio::sync::watch::channel(false);
+    Self { connection, aborted }
   }
 
   #[napi]
@@ -177,6 +179,8 @@ impl Connection {
   /// close the connection immediately
   pub fn abort(&self) {
     self.connection.close(0u8.into(), b"");
+    // `send_replace` rather than `send`, the latter drops the value when there is no receiver yet
+    self.aborted.send_replace(true);
   }
 
   #[napi]
@@ -221,8 +225,21 @@ impl Connection {
   }
 
   #[napi]
+  /// Resolves when the connection closes, or as soon as `abort()` is called.
+  ///
+  /// Signalling local abort ensures the JS transport observes the closure even if
+  /// the connection drivers do not finish shutting down.
   pub async fn closed(&self) -> () {
-    self.connection.closed().await;
+    let mut aborted = self.aborted.subscribe();
+
+    if *aborted.borrow_and_update() {
+      return;
+    }
+
+    tokio::select! {
+      _ = self.connection.closed() => {}
+      _ = aborted.changed() => {}
+    }
   }
 
   #[napi]
