@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.4](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.3...v2.1.4) (2026-09-12)
+
+
+### Bug Fixes
+
+* update quinn to 0.11.11 and quinn-proto to 0.11.17 ([#70](https://github.com/ChainSafe/js-libp2p-quic/issues/70)) ([8a3bac6](https://github.com/ChainSafe/js-libp2p-quic/commit/8a3bac6258117f8f5a57ccf6fbc06af0a23f92e0))
+
 ## [2.1.3](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.2...v2.1.3) (2026-08-09)
 
 
