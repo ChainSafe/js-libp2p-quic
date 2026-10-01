@@ -8,26 +8,22 @@ crate-type = ["cdylib"]
 path = "rust/lib.rs"
 
 [dependencies]
-libp2p-identity = { version = "0.2.12", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
-libp2p-tls = "0.6.2"
+libp2p-identity = { version = "0.3.0", features = ["ed25519", "peerid", "rand", "rsa", "secp256k1", "serde"] }
+libp2p-tls = "0.7.0"
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "3.6.1", default-features = false, features = ["napi9", "async", "tokio_rt"] }
-napi-derive = "3.4.0"
-oneshot = "0.1.11"
-pin-project-lite = "0.2.16"
-quinn = "0.11.11"
+napi = { version = "3.13.0", default-features = false, features = ["napi9", "async", "tokio_rt"] }
+napi-derive = "3.6.9"
+oneshot = "0.2.1"
+pin-project-lite = "0.2.17"
+quinn = "0.11.12"
 ring = "0.17.14"
-rustls = { version = "0.23.35", features = ["ring"] }
-tokio = { version = "1.48.0", features = ["full"] }
-socket2 = "0.6.1"
+rustls = { version = "0.23.45", features = ["ring"] }
+tokio = { version = "1.53.1", features = ["full"] }
+socket2 = "0.6.5"
 
 [build-dependencies]
-napi-build = "2.2.2"
+napi-build = "2.5.0"
 
 [profile.release]
 lto = true
 strip = "symbols"
-
-[patch.crates-io]
-# 0.11.17 plus the fix for quinn-rs/quinn#2809, drop once quinn-proto 0.11.18 is released
-quinn-proto = { git = "https://github.com/quinn-rs/quinn", rev = "b826169972971a4a18a7a7d32694d7d90483068b" }
