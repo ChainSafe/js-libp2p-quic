@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.5](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.4...v2.1.5) (2026-10-05)
+
+
+### Bug Fixes
+
+* return an error instead of panicking when deriving the remote peer id ([#76](https://github.com/ChainSafe/js-libp2p-quic/issues/76)) ([1faabe4](https://github.com/ChainSafe/js-libp2p-quic/commit/1faabe43c1c0ec95d2b9ca77f740cc9fd6e2bdd1))
+
+
+### Miscellaneous Chores
+
+* refresh Rust dependencies ([#69](https://github.com/ChainSafe/js-libp2p-quic/issues/69)) ([87687b4](https://github.com/ChainSafe/js-libp2p-quic/commit/87687b41e5174bb14c134d15d90de7e5a4f2025c))
+* release on chore and deps commits ([#74](https://github.com/ChainSafe/js-libp2p-quic/issues/74)) ([8449496](https://github.com/ChainSafe/js-libp2p-quic/commit/8449496dc41015d360692b6ed2e23a14d86af209))
+
 ## [2.1.4](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.3...v2.1.4) (2026-09-12)
 
 
