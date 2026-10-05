@@ -211,6 +211,8 @@ dependencies = [
  "oneshot",
  "pin-project-lite",
  "quinn",
+ "quinn-proto",
+ "quinn-udp",
  "ring",
  "rustls",
  "socket2",

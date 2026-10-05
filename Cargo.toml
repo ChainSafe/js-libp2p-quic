@@ -16,6 +16,8 @@ napi-derive = "3.6.9"
 oneshot = "0.2.1"
 pin-project-lite = "0.2.17"
 quinn = "0.11.12"
+quinn-proto = "0.11.19"
+quinn-udp = "0.5.16"
 ring = "0.17.14"
 rustls = { version = "0.23.45", features = ["ring"] }
 tokio = { version = "1.53.1", features = ["full"] }
