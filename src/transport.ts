@@ -31,6 +31,7 @@ export class QuicTransport implements Transport {
   readonly #config: napi.QuinnConfig
   readonly #enableIpv4: boolean
   readonly #enableIpv6: boolean
+  readonly #reuseListenPort: boolean
 
   readonly #clients: {
     ip4?: napi.Client
@@ -53,6 +54,7 @@ export class QuicTransport implements Transport {
     this.#config = new napi.QuinnConfig(config)
     this.#enableIpv4 = options.ipv4 !== false
     this.#enableIpv6 = options.ipv6 !== false
+    this.#reuseListenPort = options.reuseListenPort === true
     this.#clients = {}
     this.#listeners = new Set()
 
@@ -137,7 +139,7 @@ export class QuicTransport implements Transport {
 
     this.log('dialing', ma.toString())
     const addr = nodeAddressFromMultiaddr(ma)
-    const dialer = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
+    const dialer = this.#dialer(addr.family)
 
     if (dialer == null) {
       throw new Error(`No QUIC client available for IPv${addr.family}`)
@@ -199,6 +201,20 @@ export class QuicTransport implements Transport {
       maConn.abort(err)
       throw err
     }
+  }
+
+  #dialer (family: 4 | 6): napi.Client | napi.Server | undefined {
+    if (this.#reuseListenPort) {
+      for (const listener of this.#listeners) {
+        const server = listener.server(family)
+
+        if (server != null) {
+          return server
+        }
+      }
+    }
+
+    return family === 4 ? this.#clients.ip4 : this.#clients.ip6
   }
 
   createListener (options: QuicCreateListenerOptions): Listener {
