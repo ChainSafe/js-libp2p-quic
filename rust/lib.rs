@@ -70,7 +70,7 @@ impl Server {
       None => Err(to_err("server closed")),
     }?;
     let connection = incoming.await.map_err(to_err)?;
-    Ok(Connection::new(connection))
+    Connection::new(connection)
   }
 
   #[napi]
@@ -130,7 +130,7 @@ impl Client {
     let connecting = self.endpoint.connect(socket_addr, "l").map_err(to_err)?;
     let connection = connecting.await.map_err(to_err)?;
 
-    Ok(Connection::new(connection))
+    Connection::new(connection)
   }
 
   #[napi]
@@ -153,14 +153,22 @@ impl Client {
 #[napi]
 pub struct Connection {
   connection: quinn::Connection,
+  peer_id: libp2p_identity::PeerId,
   aborted: tokio::sync::watch::Sender<bool>,
 }
 
 #[napi]
 impl Connection {
-  pub fn new(connection: quinn::Connection) -> Self {
+  pub fn new(connection: quinn::Connection) -> Result<Self> {
+    let peer_id = match peer_id(&connection) {
+      Ok(peer_id) => peer_id,
+      Err(e) => {
+        connection.close(0u8.into(), b"");
+        return Err(e);
+      }
+    };
     let (aborted, _) = tokio::sync::watch::channel(false);
-    Self { connection, aborted }
+    Ok(Self { connection, peer_id, aborted })
   }
 
   #[napi]
@@ -204,24 +212,8 @@ impl Connection {
       },
       remote_addr.ip(),
       remote_addr.port(),
-      self.peer_id().to_base58()
+      self.peer_id.to_base58()
     )
-  }
-
-  // taken from rust-libp2p-quic
-  pub fn peer_id(&self) -> libp2p_identity::PeerId {
-    let identity = self
-      .connection
-      .peer_identity()
-      .expect("connection got identity because it passed TLS handshake; qed");
-    let certificates: Box<Vec<rustls::pki_types::CertificateDer>> =
-      identity.downcast().expect("we rely on rustls feature; qed");
-    let end_entity = certificates
-      .first()
-      .expect("there should be exactly one certificate; qed");
-    let p2p_cert = libp2p_tls::certificate::parse(end_entity)
-      .expect("the certificate was validated during TLS handshake; qed");
-    p2p_cert.peer_id()
   }
 
   #[napi]
@@ -331,6 +323,21 @@ impl ToNapiValue for WriteResult {
     let _ = napi::check_status!(napi::sys::napi_get_undefined(env, &mut result));
     Ok(result)
   }
+}
+
+// taken from rust-libp2p-quic
+fn peer_id(connection: &quinn::Connection) -> Result<libp2p_identity::PeerId> {
+  let identity = connection
+    .peer_identity()
+    .ok_or_else(|| to_err("connection has no peer identity"))?;
+  let certificates: Box<Vec<rustls::pki_types::CertificateDer>> = identity
+    .downcast()
+    .map_err(|_| to_err("unexpected peer identity type"))?;
+  let end_entity = certificates
+    .first()
+    .ok_or_else(|| to_err("connection has no peer certificate"))?;
+  let p2p_cert = libp2p_tls::certificate::parse(end_entity).map_err(to_err)?;
+  Ok(p2p_cert.peer_id())
 }
 
 fn to_err<T: ToString>(str: T) -> napi::Error {
