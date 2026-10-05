@@ -47,6 +47,15 @@ export type QuicOptions = Omit<napi.Config, 'privateKeyProto'> & {
    * @default true
    */
   ipv6?: boolean
+
+  /**
+   * Dial from the port of a listener of the same address family, when there is one,
+   * instead of from a separate ephemeral port. A NAT then maps the outgoing connection
+   * to the address peers were told to reach, which hole punching needs.
+   *
+   * @default false
+   */
+  reuseListenPort?: boolean
 }
 
 export interface QuicComponents {

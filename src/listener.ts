@@ -109,6 +109,15 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     return []
   }
 
+  /**
+   * The listening endpoint, when it is bound to the given address family
+   */
+  server (family: 4 | 6): napi.Server | undefined {
+    if (this.state.status === 'listening' && nodeAddressFromMultiaddr(this.state.listenAddr).family === family) {
+      return this.state.listener
+    }
+  }
+
   async listen (ma: Multiaddr): Promise<void> {
     const addr = nodeAddressFromMultiaddr(ma)
     const controller = new AbortController()
