@@ -75,7 +75,7 @@ describe('Quic Transport', () => {
     await startable.stop()
   })
 
-  it('dials from the listen port when reuseListenPort is set', async () => {
+  it('dials from the listen port by default', async () => {
     let inbound: (remoteAddr: Multiaddr) => void = () => {}
     const remoteAddr = new Promise<Multiaddr>(resolve => { inbound = resolve })
     const upgrader = {
@@ -83,7 +83,7 @@ describe('Quic Transport', () => {
       upgradeOutbound: async (conn: MultiaddrConnection) => conn as unknown as Connection
     } as unknown as Upgrader
 
-    const listen = async (reuseListenPort: boolean): Promise<{ transport: Transport, addr: Multiaddr }> => {
+    const listen = async (reuseListenPort?: boolean): Promise<{ transport: Transport, addr: Multiaddr }> => {
       const transport = quic({ ipv6: false, reuseListenPort })(await createComponents())
       const listener = transport.createListener({ upgrader })
       listeners.push(listener)
@@ -92,7 +92,7 @@ describe('Quic Transport', () => {
     }
 
     const target = await listen(false)
-    const dialer = await listen(true)
+    const dialer = await listen()
 
     const conn = await dialer.transport.dial(target.addr, { upgrader, signal: AbortSignal.timeout(5_000) })
 
