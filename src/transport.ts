@@ -52,7 +52,7 @@ export class QuicTransport implements Transport {
     this.#config = new napi.QuinnConfig(config)
     this.#enableIpv4 = options.ipv4 !== false
     this.#enableIpv6 = options.ipv6 !== false
-    this.#reuseListenPort = options.reuseListenPort === true
+    this.#reuseListenPort = options.reuseListenPort !== false
     this.#clients = {}
 
     this.#openClients()
