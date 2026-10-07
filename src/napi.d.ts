@@ -343,6 +343,8 @@ export declare class Server {
   constructor(config: QuinnConfig, ip: string, port: number)
   port(): number
   inboundConnection(): Promise<Connection>
+  /** Dial from the listening socket, so the connection leaves from the port peers were told to reach */
+  outboundConnection(ip: string, port: number): Promise<Connection>
   abort(): Promise<void>
   stats(): EndpointStats
 }

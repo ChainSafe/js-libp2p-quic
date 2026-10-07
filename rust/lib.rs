@@ -7,7 +7,6 @@ use std::{
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use tokio::sync::Mutex;
-use socket2::{Socket, Domain, Type};
 
 mod config;
 mod socket;
@@ -32,22 +31,12 @@ impl Server {
   pub fn new(config: &config::QuinnConfig, ip: String, port: u16) -> Result<Self> {
     let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
     let socket_addr = SocketAddr::new(ip_addr, port);
-    let socket;
-
-    // Create a TCP listener bound to two addresses.
-    if ip_addr.is_ipv6() {
-      socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
-      socket.set_only_v6(true)?;
-    } else {
-      socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
-    }
-
-    socket.bind(&socket_addr.into())?;
+    let socket = socket::create_socket(config.socket_config, socket_addr)?;
 
     let socket: Arc<socket::UdpSocket> = block_on(async move{
-      socket::UdpSocket::wrap_udp_socket(socket.into())
+      socket::UdpSocket::wrap_udp_socket(socket)
     })?;
-    let endpoint = block_on(async {
+    let mut endpoint = block_on(async {
       quinn::Endpoint::new_with_abstract_socket(
         config.endpoint_config.clone(),
         Some(config.server_config.clone()),
@@ -55,6 +44,7 @@ impl Server {
         Arc::new(quinn::TokioRuntime),
       )
     })?;
+    endpoint.set_default_client_config(config.client_config.clone());
     Ok(Self { socket, endpoint, shutdown_timeout: config.shutdown_timeout })
   }
 
@@ -71,6 +61,12 @@ impl Server {
     }?;
     let connection = incoming.await.map_err(to_err)?;
     Connection::new(connection)
+  }
+
+  #[napi]
+  /// Dial from the listening socket, so the connection leaves from the port peers were told to reach
+  pub async fn outbound_connection(&self, ip: String, port: u16) -> Result<Connection> {
+    dial(&self.endpoint, ip, port).await
   }
 
   #[napi]
@@ -125,12 +121,7 @@ impl Client {
 
   #[napi]
   pub async fn outbound_connection(&self, ip: String, port: u16) -> Result<Connection> {
-    let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
-    let socket_addr = SocketAddr::new(ip_addr, port);
-    let connecting = self.endpoint.connect(socket_addr, "l").map_err(to_err)?;
-    let connection = connecting.await.map_err(to_err)?;
-
-    Connection::new(connection)
+    dial(&self.endpoint, ip, port).await
   }
 
   #[napi]
@@ -323,6 +314,15 @@ impl ToNapiValue for WriteResult {
     let _ = napi::check_status!(napi::sys::napi_get_undefined(env, &mut result));
     Ok(result)
   }
+}
+
+async fn dial(endpoint: &quinn::Endpoint, ip: String, port: u16) -> Result<Connection> {
+  let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
+  let socket_addr = SocketAddr::new(ip_addr, port);
+  let connecting = endpoint.connect(socket_addr, "l").map_err(to_err)?;
+  let connection = connecting.await.map_err(to_err)?;
+
+  Connection::new(connection)
 }
 
 // taken from rust-libp2p-quic

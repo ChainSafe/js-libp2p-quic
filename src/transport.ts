@@ -9,6 +9,7 @@ import { QuicStreamMuxerFactory } from './stream-muxer.js'
 import { nodeAddressFromMultiaddr } from './utils.js'
 import type { QuicComponents, QuicDialOptions, QuicOptions } from './index.js'
 import type { QuicCreateListenerOptions } from './listener.js'
+import type { NodeAddress } from './utils.js'
 import type { Connection, CounterGroup, Listener, Logger, MultiaddrFilter, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
@@ -31,6 +32,8 @@ export class QuicTransport implements Transport {
   readonly #config: napi.QuinnConfig
   readonly #enableIpv4: boolean
   readonly #enableIpv6: boolean
+  readonly #reuseListenPort: boolean
+  readonly #listeners = new Set<QuicListener>()
 
   readonly #clients: {
     ip4?: napi.Client
@@ -50,6 +53,7 @@ export class QuicTransport implements Transport {
     this.#config = new napi.QuinnConfig(config)
     this.#enableIpv4 = options.ipv4 !== false
     this.#enableIpv6 = options.ipv6 !== false
+    this.#reuseListenPort = options.reuseListenPort !== false
     this.#clients = {}
 
     this.#openClients()
@@ -120,7 +124,7 @@ export class QuicTransport implements Transport {
 
     this.log('dialing', ma.toString())
     const addr = nodeAddressFromMultiaddr(ma)
-    const dialer = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
+    const dialer = this.#dialer(addr)
 
     if (dialer == null) {
       throw new Error(`No QUIC client available for IPv${addr.family}`)
@@ -184,12 +188,33 @@ export class QuicTransport implements Transport {
     }
   }
 
+  #dialer (addr: NodeAddress): napi.Client | napi.Server | undefined {
+    const client = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
+
+    if (client == null || !this.#reuseListenPort) {
+      return client
+    }
+
+    for (const listener of this.#listeners) {
+      const server = listener.server(addr)
+
+      if (server != null) {
+        return server
+      }
+    }
+
+    return client
+  }
+
   createListener (options: QuicCreateListenerOptions): Listener {
-    return new QuicListener({
+    const listener = new QuicListener({
       options,
       config: this.#config,
       logger: this.components.logger,
       metrics: this.components.metrics
     })
+    this.#listeners.add(listener)
+    listener.addEventListener('close', () => this.#listeners.delete(listener), { once: true })
+    return listener
   }
 }
