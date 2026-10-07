@@ -5,7 +5,8 @@ import { raceSignal } from 'race-signal'
 import { QuicConnection } from './connection.js'
 import * as napi from './napi.js'
 import { QuicStreamMuxerFactory } from './stream-muxer.js'
-import { getMultiaddrs, nodeAddressFromMultiaddr } from './utils.js'
+import { getMultiaddrs, isLoopback, nodeAddressFromMultiaddr } from './utils.js'
+import type { NodeAddress } from './utils.js'
 import type { ComponentLogger, CounterGroup, CreateListenerOptions, Listener, ListenerEvents, Logger, Metrics } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
@@ -110,10 +111,18 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
   }
 
   /**
-   * The listening endpoint, when it is bound to the given address family
+   * The listening endpoint, when it can dial the given address: it is still
+   * open, bound to the same address family, and not bound to a loopback
+   * address unless the target is one too
    */
-  server (family: 4 | 6): napi.Server | undefined {
-    if (this.state.status === 'listening' && nodeAddressFromMultiaddr(this.state.listenAddr).family === family) {
+  server (target: NodeAddress): napi.Server | undefined {
+    if (this.state.status !== 'listening' || this.state.controller.signal.aborted) {
+      return
+    }
+
+    const bound = nodeAddressFromMultiaddr(this.state.listenAddr)
+
+    if (bound.family === target.family && (!isLoopback(bound.address) || isLoopback(target.address))) {
       return this.state.listener
     }
   }

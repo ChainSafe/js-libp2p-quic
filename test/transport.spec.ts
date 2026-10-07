@@ -11,7 +11,8 @@ import { quic } from '../src/index.js'
 import { nodeAddressFromMultiaddr } from '../src/utils.js'
 import { createComponents } from './util.js'
 import type { QuicComponents } from '../src/index.js'
-import type { Connection, Listener, MultiaddrConnection, Transport, Upgrader } from '@libp2p/interface'
+import type { QuicListener } from '../src/listener.js'
+import type { Connection, Listener, MultiaddrConnection, Startable, Transport, Upgrader } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 describe('Quic Transport', () => {
@@ -98,6 +99,41 @@ describe('Quic Transport', () => {
 
     expect(nodeAddressFromMultiaddr(await remoteAddr).port).to.equal(nodeAddressFromMultiaddr(dialer.addr).port)
     await conn.close()
+  })
+
+  it('reuses only an open listener that can reach the target', async () => {
+    const listener = quic({ ipv6: false })(components).createListener({ upgrader: stubInterface<Upgrader>() }) as QuicListener
+    listeners.push(listener)
+    await listener.listen(multiaddr('/ip4/127.0.0.1/udp/0/quic-v1'))
+
+    expect(listener.server({ family: 4, address: '127.0.0.1', port: 1 })).to.not.equal(undefined)
+    expect(listener.server({ family: 6, address: '::1', port: 1 })).to.equal(undefined)
+    expect(listener.server({ family: 4, address: '192.0.2.1', port: 1 })).to.equal(undefined)
+
+    const closing = listener.close()
+    expect(listener.server({ family: 4, address: '127.0.0.1', port: 1 })).to.equal(undefined)
+    await closing
+  })
+
+  it('does not reuse a listener for a family without a client', async () => {
+    const upgrader = stubInterface<Upgrader>()
+    const target = quic({ ipv6: false })(components).createListener({ upgrader })
+    listeners.push(target)
+    await target.listen(multiaddr('/ip4/127.0.0.1/udp/0/quic-v1'))
+    const [addr] = target.getAddrs()
+
+    const ipv6Only = quic({ ipv4: false })(await createComponents())
+    const ipv6OnlyListener = ipv6Only.createListener({ upgrader })
+    listeners.push(ipv6OnlyListener)
+    await ipv6OnlyListener.listen(multiaddr('/ip4/127.0.0.1/udp/0/quic-v1'))
+    await expect(ipv6Only.dial(addr, { upgrader, signal: AbortSignal.timeout(5_000) })).to.eventually.be.rejectedWith('No QUIC client available for IPv4')
+
+    const stopped = quic({ ipv6: false })(await createComponents()) as Transport & Startable
+    const stoppedListener = stopped.createListener({ upgrader })
+    listeners.push(stoppedListener)
+    await stoppedListener.listen(multiaddr('/ip4/127.0.0.1/udp/0/quic-v1'))
+    await stopped.stop()
+    await expect(stopped.dial(addr, { upgrader, signal: AbortSignal.timeout(5_000) })).to.eventually.be.rejectedWith('No QUIC client available for IPv4')
   })
 
   async function testListenAddresses (ma: Multiaddr, wildcard: boolean): Promise<void> {

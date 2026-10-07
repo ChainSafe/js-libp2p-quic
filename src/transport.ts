@@ -9,6 +9,7 @@ import { QuicStreamMuxerFactory } from './stream-muxer.js'
 import { nodeAddressFromMultiaddr } from './utils.js'
 import type { QuicComponents, QuicDialOptions, QuicOptions } from './index.js'
 import type { QuicCreateListenerOptions } from './listener.js'
+import type { NodeAddress } from './utils.js'
 import type { Connection, CounterGroup, Listener, Logger, MultiaddrFilter, Transport } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
@@ -123,7 +124,7 @@ export class QuicTransport implements Transport {
 
     this.log('dialing', ma.toString())
     const addr = nodeAddressFromMultiaddr(ma)
-    const dialer = this.#dialer(addr.family)
+    const dialer = this.#dialer(addr)
 
     if (dialer == null) {
       throw new Error(`No QUIC client available for IPv${addr.family}`)
@@ -187,18 +188,22 @@ export class QuicTransport implements Transport {
     }
   }
 
-  #dialer (family: 4 | 6): napi.Client | napi.Server | undefined {
-    if (this.#reuseListenPort) {
-      for (const listener of this.#listeners) {
-        const server = listener.server(family)
+  #dialer (addr: NodeAddress): napi.Client | napi.Server | undefined {
+    const client = addr.family === 4 ? this.#clients.ip4 : this.#clients.ip6
 
-        if (server != null) {
-          return server
-        }
+    if (client == null || !this.#reuseListenPort) {
+      return client
+    }
+
+    for (const listener of this.#listeners) {
+      const server = listener.server(addr)
+
+      if (server != null) {
+        return server
       }
     }
 
-    return family === 4 ? this.#clients.ip4 : this.#clients.ip6
+    return client
   }
 
   createListener (options: QuicCreateListenerOptions): Listener {

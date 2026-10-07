@@ -49,9 +49,10 @@ export type QuicOptions = Omit<napi.Config, 'privateKeyProto'> & {
   ipv6?: boolean
 
   /**
-   * Dial from the port of a listener of the same address family, when there is one,
-   * instead of from a separate ephemeral port. A NAT then maps the outgoing connection
-   * to the address peers were told to reach, which hole punching needs.
+   * When an active listener of the same address family is available for reuse,
+   * outbound connections use its bound IP and port and close when that listener
+   * closes. Setting this to `false`, or having no eligible listener, uses the
+   * separate client socket.
    *
    * @default true
    */

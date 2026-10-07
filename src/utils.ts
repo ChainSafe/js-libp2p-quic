@@ -40,6 +40,10 @@ export function isAnyAddr (ip: string): boolean {
   return ['0.0.0.0', '::'].includes(ip)
 }
 
+export function isLoopback (ip: string): boolean {
+  return ip === '::1' || ip.startsWith('127.')
+}
+
 const networks = os.networkInterfaces()
 
 function getNetworkAddrs (family: string): string[] {
