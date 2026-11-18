@@ -1483,8 +1483,7 @@ dependencies = [
 [[package]]
 name = "quinn-proto"
 version = "0.11.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e750cca55fe4f0439a15d0bb529da9651e79993e8e72c61a899a36d462befbe"
+source = "git+https://github.com/lodekeeper/quinn?rev=49297a1eeeb1d8242422ac47d25b633946d6f49c#49297a1eeeb1d8242422ac47d25b633946d6f49c"
 dependencies = [
  "bytes",
  "fastbloom",
