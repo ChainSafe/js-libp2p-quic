@@ -1,6 +1,7 @@
 #![deny(clippy::all)]
 
 use std::{
+  collections::HashMap,
   net::{IpAddr, SocketAddr},
   sync::{atomic::{AtomicU64, Ordering}, Arc},
   time::Duration,
@@ -8,7 +9,7 @@ use std::{
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use tokio::sync::{mpsc, Mutex, Semaphore};
+use tokio::sync::{mpsc, Mutex, OwnedSemaphorePermit, Semaphore};
 use socket2::{Socket, Domain, Type};
 
 mod config;
@@ -26,12 +27,53 @@ pub enum SocketFamily {
 /// Further incoming connections are refused until one of these completes.
 const MAX_PENDING_INBOUND: usize = 256;
 
+/// Once this many pending slots are taken, a remote address must be validated with a
+/// Retry before its connection is given a slot.
+const RETRY_THRESHOLD: usize = MAX_PENDING_INBOUND / 2;
+
+/// Maximum number of pending slots held by one remote IPv4 address or IPv6 /64.
+/// Validated and unvalidated addresses are counted separately, so packets sent with
+/// someone else's source address cannot use up that address's share.
+const MAX_PENDING_INBOUND_PER_SOURCE: usize = 8;
+
+/// A remote IPv4 address or IPv6 /64, and whether the address has been validated
+type Source = (IpAddr, bool);
+
+type PendingSources = Arc<std::sync::Mutex<HashMap<Source, usize>>>;
+
+fn source(incoming: &quinn::Incoming) -> Source {
+  let ip = match incoming.remote_address().ip() {
+    IpAddr::V6(ip) => IpAddr::V6((u128::from(ip) & (!0u128 << 64)).into()),
+    ip => ip,
+  };
+  (ip, incoming.remote_address_validated())
+}
+
+/// A pending inbound connection's share of the limits above, released on drop
+struct PendingSlot {
+  _permit: OwnedSemaphorePermit,
+  sources: PendingSources,
+  source: Source,
+}
+
+impl Drop for PendingSlot {
+  fn drop(&mut self) {
+    let mut sources = self.sources.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(count) = sources.get_mut(&self.source) {
+      *count -= 1;
+      if *count == 0 {
+        sources.remove(&self.source);
+      }
+    }
+  }
+}
+
 #[napi]
 pub struct Server {
   socket: Arc<socket::UdpSocket>,
   endpoint: quinn::Endpoint,
   shutdown_timeout: Duration,
-  inbound: Mutex<mpsc::Receiver<Connection>>,
+  inbound: Mutex<mpsc::Receiver<(Connection, PendingSlot)>>,
   failed_handshakes: Arc<AtomicU64>,
   accept_task: tokio::task::JoinHandle<()>,
 }
@@ -48,24 +90,45 @@ impl Drop for Server {
 /// Established connections are queued on `established`.
 async fn accept_loop(
   endpoint: quinn::Endpoint,
-  established: mpsc::Sender<Connection>,
+  established: mpsc::Sender<(Connection, PendingSlot)>,
   handshake_timeout: Duration,
   failed_handshakes: Arc<AtomicU64>,
 ) {
   let permits = Arc::new(Semaphore::new(MAX_PENDING_INBOUND));
+  let sources = PendingSources::default();
 
   while let Some(incoming) = endpoint.accept().await {
-    let Ok(permit) = permits.clone().try_acquire_owned() else {
-      incoming.refuse();
-      continue;
+    let source = source(&incoming);
+    let validated = source.1;
+    let slot = {
+      let mut sources_guard = sources.lock().unwrap_or_else(|e| e.into_inner());
+      let pending = sources_guard.get(&source).copied().unwrap_or(0);
+      let source_full = pending >= MAX_PENDING_INBOUND_PER_SOURCE;
+      let busy = MAX_PENDING_INBOUND - permits.available_permits() >= RETRY_THRESHOLD;
+
+      if !validated && (source_full || busy) {
+        // the peer will come back with a token that validates its address
+        if let Err(e) = incoming.retry() {
+          e.into_incoming().refuse();
+        }
+        continue;
+      }
+
+      let permit = match permits.clone().try_acquire_owned() {
+        Ok(permit) if !source_full => permit,
+        _ => {
+          incoming.refuse();
+          continue;
+        }
+      };
+
+      sources_guard.insert(source, pending + 1);
+      PendingSlot { _permit: permit, sources: sources.clone(), source }
     };
     let established = established.clone();
     let failed_handshakes = failed_handshakes.clone();
 
     tokio::spawn(async move {
-      // held until the connection has been handed over, a full queue then counts against the limit
-      let _permit = permit;
-
       // on timeout the handshake future is dropped, which closes the connection
       let connection = match tokio::time::timeout(handshake_timeout, incoming).await {
         Ok(Ok(connection)) => Connection::new(connection).ok(),
@@ -73,8 +136,9 @@ async fn accept_loop(
       };
 
       match connection {
+        // the slot travels with the connection and is released once it has been picked up
         Some(connection) => {
-          if let Err(mpsc::error::SendError(connection)) = established.send(connection).await {
+          if let Err(mpsc::error::SendError((connection, _))) = established.send((connection, slot)).await {
             // the server has gone away
             connection.abort();
           }
@@ -146,7 +210,7 @@ impl Server {
   /// Handshakes that fail or time out are not surfaced here, they are counted in `stats()`.
   pub async fn inbound_connection(&self) -> Result<Connection> {
     match self.inbound.lock().await.recv().await {
-      Some(connection) => Ok(connection),
+      Some((connection, _slot)) => Ok(connection),
       None => Err(to_err("server closed")),
     }
   }
