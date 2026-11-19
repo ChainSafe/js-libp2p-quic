@@ -75,6 +75,7 @@ pub struct Server {
   shutdown_timeout: Duration,
   inbound: Mutex<mpsc::Receiver<(Connection, PendingSlot)>>,
   failed_handshakes: Arc<AtomicU64>,
+  retried_handshakes: Arc<AtomicU64>,
   accept_task: tokio::task::JoinHandle<()>,
 }
 
@@ -93,6 +94,7 @@ async fn accept_loop(
   established: mpsc::Sender<(Connection, PendingSlot)>,
   handshake_timeout: Duration,
   failed_handshakes: Arc<AtomicU64>,
+  retried_handshakes: Arc<AtomicU64>,
 ) {
   let permits = Arc::new(Semaphore::new(MAX_PENDING_INBOUND));
   let sources = PendingSources::default();
@@ -108,8 +110,11 @@ async fn accept_loop(
 
       if !validated && (source_full || busy) {
         // the peer will come back with a token that validates its address
-        if let Err(e) = incoming.retry() {
-          e.into_incoming().refuse();
+        match incoming.retry() {
+          Ok(()) => {
+            retried_handshakes.fetch_add(1, Ordering::Relaxed);
+          }
+          Err(e) => e.into_incoming().refuse(),
         }
         continue;
       }
@@ -182,11 +187,13 @@ impl Server {
     })?;
     let (established, inbound) = mpsc::channel(MAX_PENDING_INBOUND);
     let failed_handshakes = Arc::new(AtomicU64::new(0));
+    let retried_handshakes = Arc::new(AtomicU64::new(0));
     let accept_task = spawn(accept_loop(
       endpoint.clone(),
       established,
       config.handshake_timeout,
       failed_handshakes.clone(),
+      retried_handshakes.clone(),
     ));
 
     Ok(Self {
@@ -195,6 +202,7 @@ impl Server {
       shutdown_timeout: config.shutdown_timeout,
       inbound: Mutex::new(inbound),
       failed_handshakes,
+      retried_handshakes,
       accept_task,
     })
   }
@@ -207,7 +215,8 @@ impl Server {
   #[napi]
   /// Resolves with the next inbound connection that has completed its handshake.
   ///
-  /// Handshakes that fail or time out are not surfaced here, they are counted in `stats()`.
+  /// Handshakes that fail, time out or are answered with a Retry are not surfaced here,
+  /// they are counted in `stats()`.
   pub async fn inbound_connection(&self) -> Result<Connection> {
     match self.inbound.lock().await.recv().await {
       Some((connection, _slot)) => Ok(connection),
@@ -235,6 +244,7 @@ impl Server {
       stats.refused_handshakes,
       stats.ignored_handshakes,
       self.failed_handshakes.load(Ordering::Relaxed),
+      self.retried_handshakes.load(Ordering::Relaxed),
     )
   }
 }
@@ -294,6 +304,7 @@ impl Client {
       stats.outgoing_handshakes,
       stats.refused_handshakes,
       stats.ignored_handshakes,
+      0,
       0,
     )
   }

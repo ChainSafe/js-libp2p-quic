@@ -89,7 +89,8 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
           [`${this.addr} accepted`]: stats.acceptedHandshakes,
           [`${this.addr} refused`]: stats.refusedHandshakes,
           [`${this.addr} ignored`]: stats.ignoredHandshakes,
-          [`${this.addr} failed`]: stats.failedHandshakes
+          [`${this.addr} failed`]: stats.failedHandshakes,
+          [`${this.addr} retried`]: stats.retriedHandshakes
         }
       }
     })

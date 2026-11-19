@@ -343,6 +343,11 @@ export declare class EndpointStats {
    * but failed or timed out before completing
    */
   failedHandshakes: number
+  /**
+   * Cummulative number of inbound Quic handshakes this Endpoint answered with a Retry,
+   * asking the remote to validate its address first
+   */
+  retriedHandshakes: number
 }
 
 /** Configuration used by the QUIC library */
@@ -356,7 +361,8 @@ export declare class Server {
   /**
    * Resolves with the next inbound connection that has completed its handshake.
    *
-   * Handshakes that fail or time out are not surfaced here, they are counted in `stats()`.
+   * Handshakes that fail, time out or are answered with a Retry are not surfaced here,
+   * they are counted in `stats()`.
    */
   inboundConnection(): Promise<Connection>
   abort(): Promise<void>

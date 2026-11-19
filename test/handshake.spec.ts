@@ -114,6 +114,7 @@ describe('Handshake', () => {
 
     expect(inbound).to.be.lessThan(SHORT_TIMEOUT)
     expect(outbound).to.be.lessThan(SHORT_TIMEOUT)
+    expect(server.stats().retriedHandshakes).to.equal(0)
   })
 
   it('accepts connections while many handshakes from the same address are in progress', async () => {
@@ -128,6 +129,8 @@ describe('Handshake', () => {
 
     expect(inbound).to.be.lessThan(SHORT_TIMEOUT)
     expect(outbound).to.be.lessThan(SHORT_TIMEOUT)
+    // the address was over its share, so it was asked to validate itself first
+    expect(server.stats().retriedHandshakes).to.be.greaterThan(0)
   })
 
   it('times out an inbound handshake that does not complete', async () => {
