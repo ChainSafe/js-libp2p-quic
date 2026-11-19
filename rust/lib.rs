@@ -1,12 +1,14 @@
 #![deny(clippy::all)]
 
 use std::{
-  net::{IpAddr, SocketAddr}, sync::Arc
+  net::{IpAddr, SocketAddr},
+  sync::{atomic::{AtomicU64, Ordering}, Arc},
+  time::Duration,
 };
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex, Semaphore};
 use socket2::{Socket, Domain, Type};
 
 mod config;
@@ -19,11 +21,70 @@ pub enum SocketFamily {
   Ipv6,
 }
 
+/// Maximum number of inbound connections that may be handshaking, or established and
+/// waiting to be picked up by `inbound_connection()`, at any one time.
+/// Further incoming connections are refused until one of these completes.
+const MAX_PENDING_INBOUND: usize = 256;
+
 #[napi]
 pub struct Server {
   socket: Arc<socket::UdpSocket>,
   endpoint: quinn::Endpoint,
-  shutdown_timeout: std::time::Duration,
+  shutdown_timeout: Duration,
+  inbound: Mutex<mpsc::Receiver<Connection>>,
+  failed_handshakes: Arc<AtomicU64>,
+  accept_task: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for Server {
+  fn drop(&mut self) {
+    // the accept loop holds its own handle to the endpoint, stop it so the endpoint can be dropped
+    self.accept_task.abort();
+  }
+}
+
+/// Accept incoming connections and drive each handshake on its own task, so a slow or
+/// stalled handshake does not delay the connections behind it.
+/// Established connections are queued on `established`.
+async fn accept_loop(
+  endpoint: quinn::Endpoint,
+  established: mpsc::Sender<Connection>,
+  handshake_timeout: Duration,
+  failed_handshakes: Arc<AtomicU64>,
+) {
+  let permits = Arc::new(Semaphore::new(MAX_PENDING_INBOUND));
+
+  while let Some(incoming) = endpoint.accept().await {
+    let Ok(permit) = permits.clone().try_acquire_owned() else {
+      incoming.refuse();
+      continue;
+    };
+    let established = established.clone();
+    let failed_handshakes = failed_handshakes.clone();
+
+    tokio::spawn(async move {
+      // held until the connection has been handed over, a full queue then counts against the limit
+      let _permit = permit;
+
+      // on timeout the handshake future is dropped, which closes the connection
+      let connection = match tokio::time::timeout(handshake_timeout, incoming).await {
+        Ok(Ok(connection)) => Connection::new(connection).ok(),
+        _ => None,
+      };
+
+      match connection {
+        Some(connection) => {
+          if let Err(mpsc::error::SendError(connection)) = established.send(connection).await {
+            // the server has gone away
+            connection.abort();
+          }
+        }
+        None => {
+          failed_handshakes.fetch_add(1, Ordering::Relaxed);
+        }
+      }
+    });
+  }
 }
 
 #[napi]
@@ -55,7 +116,23 @@ impl Server {
         Arc::new(quinn::TokioRuntime),
       )
     })?;
-    Ok(Self { socket, endpoint, shutdown_timeout: config.shutdown_timeout })
+    let (established, inbound) = mpsc::channel(MAX_PENDING_INBOUND);
+    let failed_handshakes = Arc::new(AtomicU64::new(0));
+    let accept_task = spawn(accept_loop(
+      endpoint.clone(),
+      established,
+      config.handshake_timeout,
+      failed_handshakes.clone(),
+    ));
+
+    Ok(Self {
+      socket,
+      endpoint,
+      shutdown_timeout: config.shutdown_timeout,
+      inbound: Mutex::new(inbound),
+      failed_handshakes,
+      accept_task,
+    })
   }
 
   #[napi]
@@ -64,13 +141,14 @@ impl Server {
   }
 
   #[napi]
+  /// Resolves with the next inbound connection that has completed its handshake.
+  ///
+  /// Handshakes that fail or time out are not surfaced here, they are counted in `stats()`.
   pub async fn inbound_connection(&self) -> Result<Connection> {
-    let incoming = match self.endpoint.accept().await {
-      Some(incoming) => Ok(incoming),
+    match self.inbound.lock().await.recv().await {
+      Some(connection) => Ok(connection),
       None => Err(to_err("server closed")),
-    }?;
-    let connection = incoming.await.map_err(to_err)?;
-    Connection::new(connection)
+    }
   }
 
   #[napi]
@@ -92,6 +170,7 @@ impl Server {
       stats.outgoing_handshakes,
       stats.refused_handshakes,
       stats.ignored_handshakes,
+      self.failed_handshakes.load(Ordering::Relaxed),
     )
   }
 }
@@ -99,6 +178,7 @@ impl Server {
 #[napi]
 pub struct Client {
   endpoint: quinn::Endpoint,
+  handshake_timeout: Duration,
 }
 
 #[napi]
@@ -120,7 +200,7 @@ impl Client {
       Ok::<quinn::Endpoint, Error>(endpoint)
     })?;
     endpoint.set_default_client_config(config.client_config.clone());
-    Ok(Client { endpoint })
+    Ok(Client { endpoint, handshake_timeout: config.handshake_timeout })
   }
 
   #[napi]
@@ -128,7 +208,11 @@ impl Client {
     let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
     let socket_addr = SocketAddr::new(ip_addr, port);
     let connecting = self.endpoint.connect(socket_addr, "l").map_err(to_err)?;
-    let connection = connecting.await.map_err(to_err)?;
+    // on timeout the handshake future is dropped, which closes the connection
+    let connection = tokio::time::timeout(self.handshake_timeout, connecting)
+      .await
+      .map_err(|_| to_err("handshake timed out"))?
+      .map_err(to_err)?;
 
     Connection::new(connection)
   }
@@ -146,6 +230,7 @@ impl Client {
       stats.outgoing_handshakes,
       stats.refused_handshakes,
       stats.ignored_handshakes,
+      0,
     )
   }
 }

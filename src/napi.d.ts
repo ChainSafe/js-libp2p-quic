@@ -15,6 +15,12 @@ export declare class Connection {
   rtt(): number
   id(): string
   remoteMultiaddr(): string
+  /**
+   * Resolves when the connection closes, or as soon as `abort()` is called.
+   *
+   * Signalling local abort ensures the JS transport observes the closure even if
+   * the connection drivers do not finish shutting down.
+   */
   closed(): Promise<void>
   stats(): ConnectionStats
 }
@@ -332,6 +338,11 @@ export declare class EndpointStats {
   refusedHandshakes: number
   /** Cummulative number of Quic handshakes ignored on this Endpoint */
   ignoredHandshakes: number
+  /**
+   * Cummulative number of inbound Quic handshakes that were accepted by this Endpoint
+   * but failed or timed out before completing
+   */
+  failedHandshakes: number
 }
 
 /** Configuration used by the QUIC library */
@@ -342,6 +353,11 @@ export declare class QuinnConfig {
 export declare class Server {
   constructor(config: QuinnConfig, ip: string, port: number)
   port(): number
+  /**
+   * Resolves with the next inbound connection that has completed its handshake.
+   *
+   * Handshakes that fail or time out are not surfaced here, they are counted in `stats()`.
+   */
   inboundConnection(): Promise<Connection>
   abort(): Promise<void>
   stats(): EndpointStats
@@ -361,13 +377,12 @@ export interface Config {
   /** Libp2p identity of the node, protobuf encoded. */
   privateKeyProto: Uint8Array
   /**
-   * Timeout for the initial handshake when establishing a connection.
+   * Timeout in ms for the initial handshake when establishing a connection,
+   * inbound or outbound.
    * The actual timeout is the minimum of this and the [`Config::max_idle_timeout`].
    */
   handshakeTimeout: number
-  /**
-   * Maximum duration in ms for draining the server endpoint during shutdown.
-   */
+  /** Maximum duration in ms for draining the server endpoint during shutdown. */
   shutdownTimeout: number
   /** Maximum duration of inactivity in ms to accept before timing out the connection. */
   maxIdleTimeout: number

@@ -15,6 +15,9 @@ pub struct EndpointStats {
   pub refused_handshakes: u32,
   /// Cummulative number of Quic handshakes ignored on this Endpoint
   pub ignored_handshakes: u32,
+  /// Cummulative number of inbound Quic handshakes that were accepted by this Endpoint
+  /// but failed or timed out before completing
+  pub failed_handshakes: u32,
 }
 
 impl EndpointStats {
@@ -25,12 +28,14 @@ impl EndpointStats {
     outgoing_handshakes: u64,
     refused_handshakes: u64,
     ignored_handshakes: u64,
+    failed_handshakes: u64,
   ) -> Self {
     Self {
       accepted_handshakes: accepted_handshakes as u32,
       outgoing_handshakes: outgoing_handshakes as u32,
       refused_handshakes: refused_handshakes as u32,
       ignored_handshakes: ignored_handshakes as u32,
+      failed_handshakes: failed_handshakes as u32,
     }
   }
 }
