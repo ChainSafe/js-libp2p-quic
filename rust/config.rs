@@ -61,7 +61,8 @@ pub struct Config {
   /// Libp2p identity of the node, protobuf encoded.
   pub private_key_proto: Uint8Array,
 
-  /// Timeout for the initial handshake when establishing a connection.
+  /// Timeout in ms for the initial handshake when establishing a connection,
+  /// inbound or outbound.
   /// The actual timeout is the minimum of this and the [`Config::max_idle_timeout`].
   pub handshake_timeout: u32,
 
@@ -127,6 +128,7 @@ pub struct QuinnConfig {
   pub(crate) endpoint_config: quinn::EndpointConfig,
   pub(crate) socket_config: SocketConfig,
   pub(crate) shutdown_timeout: Duration,
+  pub(crate) handshake_timeout: Duration,
 }
 
 #[napi]
@@ -148,7 +150,7 @@ impl TryFrom<Config> for QuinnConfig {
       keep_alive_interval,
       max_connection_data,
       max_stream_data,
-      handshake_timeout: _,
+      handshake_timeout,
       receive_buffer_size,
       send_buffer_size,
     } = config;
@@ -216,6 +218,7 @@ impl TryFrom<Config> for QuinnConfig {
         send_buffer_size,
       },
       shutdown_timeout: Duration::from_millis(shutdown_timeout.into()),
+      handshake_timeout: Duration::from_millis(handshake_timeout.into()),
     })
   }
 }
