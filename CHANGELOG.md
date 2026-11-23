@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.6](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.5...v2.1.6) (2026-11-23)
+
+
+### Bug Fixes
+
+* avoid use-after-free in async methods on worker teardown ([#79](https://github.com/ChainSafe/js-libp2p-quic/issues/79)) ([517940b](https://github.com/ChainSafe/js-libp2p-quic/commit/517940bdfbd19da3a134d8c8a3e4469522146967))
+* report listener metrics for all listeners ([#81](https://github.com/ChainSafe/js-libp2p-quic/issues/81)) ([d691c54](https://github.com/ChainSafe/js-libp2p-quic/commit/d691c54e4e09d43a3d26bf43e7639948d43b190b))
+* run inbound handshakes concurrently and apply handshakeTimeout ([#78](https://github.com/ChainSafe/js-libp2p-quic/issues/78)) ([6ff73ac](https://github.com/ChainSafe/js-libp2p-quic/commit/6ff73ac874a00c6b69d629ea714582e82ad92164))
+
 ## [2.1.5](https://github.com/ChainSafe/js-libp2p-quic/compare/v2.1.4...v2.1.5) (2026-10-05)
 
 
