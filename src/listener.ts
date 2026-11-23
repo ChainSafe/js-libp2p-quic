@@ -59,42 +59,6 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     this.shutdownController = new AbortController()
     setMaxListeners(Infinity, this.shutdownController.signal)
 
-    init.metrics?.registerMetricGroup('libp2p_quic_inbound_connections_total', {
-      label: 'address',
-      help: 'Current active connections in QUIC listener',
-      calculate: () => {
-        if (this.state.status !== 'listening') {
-          return {
-            [this.addr]: 0
-          }
-        }
-
-        return {
-          [this.addr]: this.state.connections.size
-        }
-      }
-    })
-
-    init.metrics?.registerMetricGroup('libp2p_quic_listener_handshakes_total', {
-      label: 'address',
-      help: 'Total count of QUIC listener handshakes by outcome',
-      calculate: () => {
-        if (this.state.status !== 'listening') {
-          return {}
-        }
-
-        const stats = this.state.listener.stats()
-
-        return {
-          [`${this.addr} accepted`]: stats.acceptedHandshakes,
-          [`${this.addr} refused`]: stats.refusedHandshakes,
-          [`${this.addr} ignored`]: stats.ignoredHandshakes,
-          [`${this.addr} failed`]: stats.failedHandshakes,
-          [`${this.addr} retried`]: stats.retriedHandshakes
-        }
-      }
-    })
-
     this.metrics = {
       events: init.metrics?.registerMetricGroup('libp2p_quic_listener_events_total', {
         label: 'address',
@@ -107,6 +71,34 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
     }
 
     this.log('new')
+  }
+
+  inboundConnectionsMetric (): Record<string, number> {
+    if (this.state.status !== 'listening') {
+      return {
+        [this.addr]: 0
+      }
+    }
+
+    return {
+      [this.addr]: this.state.connections.size
+    }
+  }
+
+  handshakesMetric (): Record<string, number> {
+    if (this.state.status !== 'listening') {
+      return {}
+    }
+
+    const stats = this.state.listener.stats()
+
+    return {
+      [`${this.addr} accepted`]: stats.acceptedHandshakes,
+      [`${this.addr} refused`]: stats.refusedHandshakes,
+      [`${this.addr} ignored`]: stats.ignoredHandshakes,
+      [`${this.addr} failed`]: stats.failedHandshakes,
+      [`${this.addr} retried`]: stats.retriedHandshakes
+    }
   }
 
   updateAnnounceAddrs (_addrs: Multiaddr[]): void {
