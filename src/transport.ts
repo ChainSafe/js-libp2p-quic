@@ -37,6 +37,9 @@ export class QuicTransport implements Transport {
     ip6?: napi.Client
   }
 
+  // closed listeners are kept so their series drop to 0 instead of keeping the last value
+  readonly #listeners: Set<QuicListener>
+
   readonly listenFilter: MultiaddrFilter
   readonly dialFilter: MultiaddrFilter
 
@@ -51,6 +54,7 @@ export class QuicTransport implements Transport {
     this.#enableIpv4 = options.ipv4 !== false
     this.#enableIpv6 = options.ipv6 !== false
     this.#clients = {}
+    this.#listeners = new Set()
 
     this.#openClients()
 
@@ -64,6 +68,19 @@ export class QuicTransport implements Transport {
         help: 'Total count of QUIC dialer errors by type'
       })
     }
+
+    // registered once for all listeners, a metric group registered again under the same name keeps the first `calculate`
+    this.components.metrics?.registerMetricGroup('libp2p_quic_inbound_connections_total', {
+      label: 'address',
+      help: 'Current active connections in QUIC listener',
+      calculate: () => this.#listenerMetrics(listener => listener.inboundConnectionsMetric())
+    })
+
+    this.components.metrics?.registerMetricGroup('libp2p_quic_listener_handshakes_total', {
+      label: 'address',
+      help: 'Total count of QUIC listener handshakes by outcome',
+      calculate: () => this.#listenerMetrics(listener => listener.handshakesMetric())
+    })
 
     this.listenFilter = listenFilter
     this.dialFilter = dialFilter
@@ -185,11 +202,21 @@ export class QuicTransport implements Transport {
   }
 
   createListener (options: QuicCreateListenerOptions): Listener {
-    return new QuicListener({
+    const listener = new QuicListener({
       options,
       config: this.#config,
       logger: this.components.logger,
       metrics: this.components.metrics
     })
+    this.#listeners.add(listener)
+    return listener
+  }
+
+  #listenerMetrics (metric: (listener: QuicListener) => Record<string, number>): Record<string, number> {
+    const values: Record<string, number> = {}
+    for (const listener of this.#listeners) {
+      Object.assign(values, metric(listener))
+    }
+    return values
   }
 }

@@ -11,7 +11,7 @@ import { quic } from '../src/index.js'
 import { nodeAddressFromMultiaddr } from '../src/utils.js'
 import { createComponents } from './util.js'
 import type { QuicComponents } from '../src/index.js'
-import type { Connection, Listener, MultiaddrConnection, Upgrader } from '@libp2p/interface'
+import type { CalculateMetric, CalculatedMetricOptions, Connection, Listener, Metrics, MultiaddrConnection, Upgrader } from '@libp2p/interface'
 import type { Multiaddr } from '@multiformats/multiaddr'
 
 describe('Quic Transport', () => {
@@ -207,6 +207,47 @@ describe('Quic Transport', () => {
 
     for (const addr of addrs) {
       expect(nodeAddressFromMultiaddr(addr).port).to.equal(14000, 'did not listen on port')
+    }
+  })
+
+  it('reports listener metrics for every listener', async () => {
+    const calculated = new Map<string, CalculateMetric<Record<string, number>>>()
+    const metrics = stubInterface<Metrics>({
+      // like @libp2p/prometheus-metrics, registering a name again keeps the existing group
+      registerMetricGroup: ((name: string, options?: CalculatedMetricOptions<Record<string, number>>) => {
+        if (options?.calculate != null && !calculated.has(name)) {
+          calculated.set(name, options.calculate)
+        }
+      }) as Metrics['registerMetricGroup']
+    })
+
+    const transport = quic()({ ...components, metrics })
+    const addrs: string[] = []
+
+    for (let i = 0; i < 2; i++) {
+      const listener = transport.createListener({
+        upgrader: stubInterface<Upgrader>()
+      })
+      listeners.push(listener)
+
+      await Promise.all([
+        pEvent(listener, 'listening'),
+        listener.listen(multiaddr('/ip4/127.0.0.1/udp/0/quic-v1'))
+      ])
+
+      const { address, port } = nodeAddressFromMultiaddr(listener.getAddrs()[0])
+      addrs.push(`${address}:${port}`)
+    }
+
+    expect(await calculated.get('libp2p_quic_inbound_connections_total')?.()).to.deep.equal({
+      [addrs[0]]: 0,
+      [addrs[1]]: 0
+    })
+
+    const handshakes = await calculated.get('libp2p_quic_listener_handshakes_total')?.()
+
+    for (const addr of addrs) {
+      expect(handshakes).to.have.property(`${addr} accepted`, 0, `missing handshakes for ${addr}`)
     }
   })
 })
