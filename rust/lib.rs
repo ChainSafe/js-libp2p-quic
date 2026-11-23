@@ -63,25 +63,34 @@ impl Server {
     return self.endpoint.local_addr().unwrap().port();
   }
 
-  #[napi]
-  pub async fn inbound_connection(&self) -> Result<Connection> {
-    let incoming = match self.endpoint.accept().await {
-      Some(incoming) => Ok(incoming),
-      None => Err(to_err("server closed")),
-    }?;
-    let connection = incoming.await.map_err(to_err)?;
-    Connection::new(connection)
+  #[napi(ts_return_type = "Promise<Connection>")]
+  pub fn inbound_connection<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, Connection>> {
+    let endpoint = self.endpoint.clone();
+    env.spawn_future(async move {
+      let incoming = match endpoint.accept().await {
+        Some(incoming) => Ok(incoming),
+        None => Err(to_err("server closed")),
+      }?;
+      let connection = incoming.await.map_err(to_err)?;
+      Connection::new(connection)
+    })
   }
 
-  #[napi]
-  pub async fn abort(&self) {
-    self.endpoint.close(0u8.into(), b"");
+  #[napi(ts_return_type = "Promise<void>")]
+  pub fn abort<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, ()>> {
+    let endpoint = self.endpoint.clone();
+    let socket = self.socket.clone();
+    let shutdown_timeout = self.shutdown_timeout;
+    env.spawn_future(async move {
+      endpoint.close(0u8.into(), b"");
 
-    // wait_idle() depends on every connection driver reaching the drained
-    // state, we bound the wait so one stalled driver cannot block listener close.
-    let _ = tokio::time::timeout(self.shutdown_timeout, self.endpoint.wait_idle()).await;
+      // wait_idle() depends on every connection driver reaching the drained
+      // state, we bound the wait so one stalled driver cannot block listener close.
+      let _ = tokio::time::timeout(shutdown_timeout, endpoint.wait_idle()).await;
 
-    self.socket.unbind().await;
+      socket.unbind().await;
+      Ok(())
+    })
   }
 
   #[napi]
@@ -123,14 +132,22 @@ impl Client {
     Ok(Client { endpoint })
   }
 
-  #[napi]
-  pub async fn outbound_connection(&self, ip: String, port: u16) -> Result<Connection> {
-    let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
-    let socket_addr = SocketAddr::new(ip_addr, port);
-    let connecting = self.endpoint.connect(socket_addr, "l").map_err(to_err)?;
-    let connection = connecting.await.map_err(to_err)?;
+  #[napi(ts_return_type = "Promise<Connection>")]
+  pub fn outbound_connection<'env>(
+    &self,
+    env: &'env Env,
+    ip: String,
+    port: u16,
+  ) -> Result<PromiseRaw<'env, Connection>> {
+    let endpoint = self.endpoint.clone();
+    env.spawn_future(async move {
+      let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
+      let socket_addr = SocketAddr::new(ip_addr, port);
+      let connecting = endpoint.connect(socket_addr, "l").map_err(to_err)?;
+      let connection = connecting.await.map_err(to_err)?;
 
-    Connection::new(connection)
+      Connection::new(connection)
+    })
   }
 
   #[napi]
@@ -171,16 +188,22 @@ impl Connection {
     Ok(Self { connection, peer_id, aborted })
   }
 
-  #[napi]
-  pub async fn inbound_stream(&self) -> Result<Stream> {
-    let (send, recv) = self.connection.accept_bi().await.map_err(to_err)?;
-    Ok(Stream::new(send, recv))
+  #[napi(ts_return_type = "Promise<Stream>")]
+  pub fn inbound_stream<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, Stream>> {
+    let connection = self.connection.clone();
+    env.spawn_future(async move {
+      let (send, recv) = connection.accept_bi().await.map_err(to_err)?;
+      Ok(Stream::new(send, recv))
+    })
   }
 
-  #[napi]
-  pub async fn outbound_stream(&self) -> Result<Stream> {
-    let (send, recv) = self.connection.open_bi().await.map_err(to_err)?;
-    Ok(Stream::new(send, recv))
+  #[napi(ts_return_type = "Promise<Stream>")]
+  pub fn outbound_stream<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, Stream>> {
+    let connection = self.connection.clone();
+    env.spawn_future(async move {
+      let (send, recv) = connection.open_bi().await.map_err(to_err)?;
+      Ok(Stream::new(send, recv))
+    })
   }
 
   #[napi]
@@ -216,22 +239,25 @@ impl Connection {
     )
   }
 
-  #[napi]
+  #[napi(ts_return_type = "Promise<void>")]
   /// Resolves when the connection closes, or as soon as `abort()` is called.
   ///
   /// Signalling local abort ensures the JS transport observes the closure even if
   /// the connection drivers do not finish shutting down.
-  pub async fn closed(&self) -> () {
+  pub fn closed<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, ()>> {
     let mut aborted = self.aborted.subscribe();
+    let connection = self.connection.clone();
+    env.spawn_future(async move {
+      if *aborted.borrow_and_update() {
+        return Ok(());
+      }
 
-    if *aborted.borrow_and_update() {
-      return;
-    }
-
-    tokio::select! {
-      _ = self.connection.closed() => {}
-      _ = aborted.changed() => {}
-    }
+      tokio::select! {
+        _ = connection.closed() => {}
+        _ = aborted.changed() => {}
+      }
+      Ok(())
+    })
   }
 
   #[napi]
@@ -258,42 +284,68 @@ impl Stream {
     Ok(send.id().index().to_string())
   }
 
-  #[napi]
-  pub async fn read(&self, max_len: u32) -> Result<Option<Uint8Array>> {
-    let mut buf = vec![0u8; max_len as usize];
-    let chunk = self.recv.lock().await.read(&mut buf).await.map_err(to_err)?;
-    match chunk {
-      Some(len) => {
-        buf.truncate(len);
-        Ok(Some(buf.into()))
-      },
-      None => Ok(None),
-    }
+  #[napi(ts_return_type = "Promise<Uint8Array | null>")]
+  pub fn read<'env>(
+    &self,
+    env: &'env Env,
+    max_len: u32,
+  ) -> Result<PromiseRaw<'env, Option<Uint8Array>>> {
+    let recv = self.recv.clone();
+    env.spawn_future(async move {
+      let mut buf = vec![0u8; max_len as usize];
+      let chunk = recv.lock().await.read(&mut buf).await.map_err(to_err)?;
+      match chunk {
+        Some(len) => {
+          buf.truncate(len);
+          Ok(Some(buf.into()))
+        },
+        None => Ok(None),
+      }
+    })
   }
 
   #[napi(ts_return_type = "Promise<void>")]
-  pub async fn write(&self, data: Uint8Array) -> Result<WriteResult> {
-    let error = self.send.lock().await.write_all(&data).await
-      .err().map(|e| e.to_string());
-    // Always return Ok so the Uint8Array reaches the JS thread for safe
-    // napi_ref cleanup.  WriteResult::to_napi_value handles both cleanup
-    // and error propagation (rejecting the promise when error is Some).
-    Ok(WriteResult { data, error })
+  pub fn write<'env>(
+    &self,
+    env: &'env Env,
+    data: Uint8Array,
+  ) -> Result<PromiseRaw<'env, WriteResult>> {
+    let send = self.send.clone();
+    env.spawn_future(async move {
+      let error = send.lock().await.write_all(&data).await
+        .err().map(|e| e.to_string());
+      // Always return Ok so the Uint8Array reaches the JS thread for safe
+      // napi_ref cleanup.  WriteResult::to_napi_value handles both cleanup
+      // and error propagation (rejecting the promise when error is Some).
+      Ok(WriteResult { data, error })
+    })
   }
 
-  #[napi]
-  pub async fn finish_write(&self) {
-    let _ = self.send.lock().await.finish();
+  #[napi(ts_return_type = "Promise<void>")]
+  pub fn finish_write<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, ()>> {
+    let send = self.send.clone();
+    env.spawn_future(async move {
+      let _ = send.lock().await.finish();
+      Ok(())
+    })
   }
 
-  #[napi]
-  pub async fn reset_write(&self) {
-    let _ = self.send.lock().await.reset(0u8.into());
+  #[napi(ts_return_type = "Promise<void>")]
+  pub fn reset_write<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, ()>> {
+    let send = self.send.clone();
+    env.spawn_future(async move {
+      let _ = send.lock().await.reset(0u8.into());
+      Ok(())
+    })
   }
 
-  #[napi]
-  pub async fn stop_read(&self) {
-    let _ = self.recv.lock().await.stop(0u8.into());
+  #[napi(ts_return_type = "Promise<void>")]
+  pub fn stop_read<'env>(&self, env: &'env Env) -> Result<PromiseRaw<'env, ()>> {
+    let recv = self.recv.clone();
+    env.spawn_future(async move {
+      let _ = recv.lock().await.stop(0u8.into());
+      Ok(())
+    })
   }
 }
 
