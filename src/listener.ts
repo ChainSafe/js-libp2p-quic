@@ -75,6 +75,26 @@ export class QuicListener extends TypedEventEmitter<ListenerEvents> implements L
       }
     })
 
+    init.metrics?.registerMetricGroup('libp2p_quic_listener_handshakes_total', {
+      label: 'address',
+      help: 'Total count of QUIC listener handshakes by outcome',
+      calculate: () => {
+        if (this.state.status !== 'listening') {
+          return {}
+        }
+
+        const stats = this.state.listener.stats()
+
+        return {
+          [`${this.addr} accepted`]: stats.acceptedHandshakes,
+          [`${this.addr} refused`]: stats.refusedHandshakes,
+          [`${this.addr} ignored`]: stats.ignoredHandshakes,
+          [`${this.addr} failed`]: stats.failedHandshakes,
+          [`${this.addr} retried`]: stats.retriedHandshakes
+        }
+      }
+    })
+
     this.metrics = {
       events: init.metrics?.registerMetricGroup('libp2p_quic_listener_events_total', {
         label: 'address',
