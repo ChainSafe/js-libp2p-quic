@@ -47,6 +47,16 @@ export type QuicOptions = Omit<napi.Config, 'privateKeyProto'> & {
    * @default true
    */
   ipv6?: boolean
+
+  /**
+   * When an active listener of the same address family is available for reuse,
+   * outbound connections use its bound IP and port and close when that listener
+   * closes. Setting this to `false`, or having no eligible listener, uses the
+   * separate client socket.
+   *
+   * @default true
+   */
+  reuseListenPort?: boolean
 }
 
 export interface QuicComponents {

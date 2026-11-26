@@ -10,7 +10,6 @@ use std::{
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use tokio::sync::{mpsc, Mutex, OwnedSemaphorePermit, Semaphore};
-use socket2::{Socket, Domain, Type};
 
 mod config;
 mod socket;
@@ -77,6 +76,7 @@ pub struct Server {
   failed_handshakes: Arc<AtomicU64>,
   retried_handshakes: Arc<AtomicU64>,
   accept_task: tokio::task::JoinHandle<()>,
+  handshake_timeout: Duration,
 }
 
 impl Drop for Server {
@@ -162,22 +162,12 @@ impl Server {
   pub fn new(config: &config::QuinnConfig, ip: String, port: u16) -> Result<Self> {
     let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
     let socket_addr = SocketAddr::new(ip_addr, port);
-    let socket;
-
-    // Create a TCP listener bound to two addresses.
-    if ip_addr.is_ipv6() {
-      socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
-      socket.set_only_v6(true)?;
-    } else {
-      socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
-    }
-
-    socket.bind(&socket_addr.into())?;
+    let socket = socket::create_socket(config.socket_config, socket_addr)?;
 
     let socket: Arc<socket::UdpSocket> = block_on(async move{
-      socket::UdpSocket::wrap_udp_socket(socket.into())
+      socket::UdpSocket::wrap_udp_socket(socket)
     })?;
-    let endpoint = block_on(async {
+    let mut endpoint = block_on(async {
       quinn::Endpoint::new_with_abstract_socket(
         config.endpoint_config.clone(),
         Some(config.server_config.clone()),
@@ -185,6 +175,7 @@ impl Server {
         Arc::new(quinn::TokioRuntime),
       )
     })?;
+    endpoint.set_default_client_config(config.client_config.clone());
     let (established, inbound) = mpsc::channel(MAX_PENDING_INBOUND);
     let failed_handshakes = Arc::new(AtomicU64::new(0));
     let retried_handshakes = Arc::new(AtomicU64::new(0));
@@ -204,6 +195,7 @@ impl Server {
       failed_handshakes,
       retried_handshakes,
       accept_task,
+      handshake_timeout: config.handshake_timeout,
     })
   }
 
@@ -225,6 +217,22 @@ impl Server {
         None => Err(to_err("server closed")),
       }
     })
+  }
+
+  #[napi(ts_return_type = "Promise<Connection>")]
+  /// Dial from the listening socket, so the connection leaves from the port peers were told to reach
+  pub fn outbound_connection<'env>(
+    &self,
+    env: &'env Env,
+    ip: String,
+    port: u16,
+  ) -> Result<PromiseRaw<'env, Connection>> {
+    env.spawn_future(dial(
+      self.endpoint.clone(),
+      self.handshake_timeout,
+      ip,
+      port,
+    ))
   }
 
   #[napi(ts_return_type = "Promise<void>")]
@@ -293,20 +301,12 @@ impl Client {
     ip: String,
     port: u16,
   ) -> Result<PromiseRaw<'env, Connection>> {
-    let endpoint = self.endpoint.clone();
-    let handshake_timeout = self.handshake_timeout;
-    env.spawn_future(async move {
-      let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
-      let socket_addr = SocketAddr::new(ip_addr, port);
-      let connecting = endpoint.connect(socket_addr, "l").map_err(to_err)?;
-      // on timeout the handshake future is dropped, which closes the connection
-      let connection = tokio::time::timeout(handshake_timeout, connecting)
-        .await
-        .map_err(|_| to_err("handshake timed out"))?
-        .map_err(to_err)?;
-
-      Connection::new(connection)
-    })
+    env.spawn_future(dial(
+      self.endpoint.clone(),
+      self.handshake_timeout,
+      ip,
+      port,
+    ))
   }
 
   #[napi]
@@ -536,6 +536,24 @@ impl ToNapiValue for WriteResult {
     let _ = napi::check_status!(napi::sys::napi_get_undefined(env, &mut result));
     Ok(result)
   }
+}
+
+async fn dial(
+  endpoint: quinn::Endpoint,
+  handshake_timeout: Duration,
+  ip: String,
+  port: u16,
+) -> Result<Connection> {
+  let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
+  let socket_addr = SocketAddr::new(ip_addr, port);
+  let connecting = endpoint.connect(socket_addr, "l").map_err(to_err)?;
+  // on timeout the handshake future is dropped, which closes the connection
+  let connection = tokio::time::timeout(handshake_timeout, connecting)
+    .await
+    .map_err(|_| to_err("handshake timed out"))?
+    .map_err(to_err)?;
+
+  Connection::new(connection)
 }
 
 // taken from rust-libp2p-quic
