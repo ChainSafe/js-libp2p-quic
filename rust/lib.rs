@@ -227,7 +227,12 @@ impl Server {
     ip: String,
     port: u16,
   ) -> Result<PromiseRaw<'env, Connection>> {
-    env.spawn_future(dial(self.endpoint.clone(), self.handshake_timeout, ip, port))
+    env.spawn_future(dial(
+      self.endpoint.clone(),
+      self.handshake_timeout,
+      ip,
+      port,
+    ))
   }
 
   #[napi(ts_return_type = "Promise<void>")]
@@ -296,7 +301,12 @@ impl Client {
     ip: String,
     port: u16,
   ) -> Result<PromiseRaw<'env, Connection>> {
-    env.spawn_future(dial(self.endpoint.clone(), self.handshake_timeout, ip, port))
+    env.spawn_future(dial(
+      self.endpoint.clone(),
+      self.handshake_timeout,
+      ip,
+      port,
+    ))
   }
 
   #[napi]
@@ -528,7 +538,12 @@ impl ToNapiValue for WriteResult {
   }
 }
 
-async fn dial(endpoint: quinn::Endpoint, handshake_timeout: Duration, ip: String, port: u16) -> Result<Connection> {
+async fn dial(
+  endpoint: quinn::Endpoint,
+  handshake_timeout: Duration,
+  ip: String,
+  port: u16,
+) -> Result<Connection> {
   let ip_addr = ip.parse::<IpAddr>().map_err(to_err)?;
   let socket_addr = SocketAddr::new(ip_addr, port);
   let connecting = endpoint.connect(socket_addr, "l").map_err(to_err)?;
