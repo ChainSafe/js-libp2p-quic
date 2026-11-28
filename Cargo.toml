@@ -27,3 +27,8 @@ napi-build = "2.5.0"
 [profile.release]
 lto = true
 strip = "symbols"
+
+[patch.crates-io]
+# quinn-proto 0.11.19
+# plus quinn-rs/quinn#3030, drop once it is released
+quinn-proto = { git = "https://github.com/lodekeeper/quinn", rev = "fc3b0c68b155bf7a707250af40b95e4c837423a0" }
